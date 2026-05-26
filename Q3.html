@@ -1,0 +1,939 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviseIt Q3 - Year 7 Revision Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f0f13;
+    --surface:#1a1a22;
+    --surface2:#22222e;
+    --surface3:#282839;
+    --border:#2e2e3e;
+    --text:#e8e8f0;
+    --muted:#9494b8;
+    --faint:#606081;
+    --art:#ff6b6b;
+    --history:#ffa94d;
+    --maths:#74c0fc;
+    --english:#a9e34b;
+    --science:#b197fc;
+    --spanish:#f783ac;
+    --geography:#4dd0e1;
+    --food:#ffd43b;
+    --computing:#63e6be;
+    --rs:#ff8787;
+    --correct:#51cf66;
+    --wrong:#ff6b6b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:"DM Sans",sans-serif; min-height:100vh; }
+  button, input { font:inherit; }
+  .screen { display:none; min-height:100vh; }
+  .screen.active { display:flex; flex-direction:column; }
+  #hub { padding:2rem 1.2rem 4rem; align-items:center; }
+  .hub-header { text-align:center; margin-bottom:2rem; max-width:680px; }
+  .hub-badge { display:inline-block; background:var(--surface2); border:1px solid var(--border); border-radius:999px; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:.32rem .9rem; margin-bottom:1rem; }
+  .hub-title { font-family:"Syne",sans-serif; font-size:clamp(2.1rem,8vw,4rem); font-weight:800; line-height:.95; margin-bottom:.55rem; }
+  .hub-title span { background:linear-gradient(135deg,#a78bfa,#f472b6); background-clip:text; -webkit-background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+  .hub-sub { color:var(--muted); font-size:.98rem; line-height:1.5; }
+  .hub-tools { display:flex; gap:.7rem; flex-wrap:wrap; justify-content:center; margin-top:1.2rem; }
+  .subjects-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; width:100%; max-width:760px; }
+  .subject-card { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1.2rem; cursor:pointer; transition:transform .2s,border-color .2s,box-shadow .2s; position:relative; overflow:hidden; min-height:132px; }
+  .subject-card::before { content:""; position:absolute; inset:0; opacity:0; transition:opacity .2s; background:var(--accent,#a78bfa); }
+  .subject-card:hover { transform:translateY(-3px); border-color:var(--accent,#a78bfa); box-shadow:0 12px 34px rgba(0,0,0,.35); }
+  .subject-card:hover::before { opacity:.08; }
+  .subject-card > * { position:relative; }
+  .subj-icon { font-size:1.8rem; margin-bottom:.65rem; display:block; }
+  .subj-name { font-family:"Syne",sans-serif; font-weight:800; font-size:1.03rem; margin-bottom:.28rem; }
+  .subj-count { font-size:.8rem; color:var(--muted); line-height:1.4; }
+  .mega-card { grid-column:1 / -1; background:linear-gradient(135deg,rgba(167,139,250,.16),rgba(244,114,182,.13)); border-color:rgba(167,139,250,.45); min-height:112px; }
+  .tiny-row { display:flex; align-items:center; gap:.45rem; margin-top:.75rem; color:var(--faint); font-size:.76rem; }
+  #cycles, #study { padding:1.7rem 1.2rem 3rem; width:100%; max-width:820px; margin:0 auto; }
+  .back-btn { display:inline-flex; align-items:center; gap:.4rem; background:none; border:1px solid var(--border); border-radius:999px; color:var(--muted); font-size:.85rem; padding:.42rem 1rem; cursor:pointer; margin-bottom:1.4rem; transition:all .2s; width:max-content; }
+  .back-btn:hover { color:var(--text); border-color:var(--muted); }
+  .cycles-header { margin-bottom:1.4rem; }
+  .cycles-eyebrow { font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; margin-bottom:.42rem; color:var(--muted); }
+  .cycles-title { font-family:"Syne",sans-serif; font-size:clamp(1.7rem,5vw,2.25rem); font-weight:800; }
+  .cycles-sub { color:var(--muted); margin-top:.45rem; line-height:1.5; }
+  .cycles-list { display:grid; gap:.85rem; }
+  .cycle-card { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1.1rem 1.2rem; cursor:pointer; transition:all .2s; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+  .cycle-card:hover { transform:translateX(4px); border-color:var(--accent,#a78bfa); }
+  .cycle-name { font-family:"Syne",sans-serif; font-weight:800; font-size:1rem; margin-bottom:.22rem; }
+  .cycle-topic { font-size:.84rem; color:var(--muted); line-height:1.45; }
+  .cycle-arrow { color:var(--muted); font-size:1.2rem; flex:none; }
+  #quiz { padding:1.3rem; width:100%; max-width:720px; margin:0 auto; }
+  .quiz-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.1rem; gap:1rem; }
+  .quiz-back { background:none; border:1px solid var(--border); color:var(--muted); cursor:pointer; border-radius:999px; width:38px; height:38px; }
+  .quiz-scores { display:flex; gap:.75rem; }
+  .score-badge { display:flex; align-items:center; gap:.3rem; font-family:"Syne",sans-serif; font-weight:800; font-size:.95rem; }
+  .score-badge.correct { color:var(--correct); }
+  .score-badge.wrong { color:var(--wrong); }
+  .quiz-progress { height:4px; background:var(--border); border-radius:999px; margin-bottom:1.1rem; overflow:hidden; }
+  .quiz-progress-bar { height:100%; width:0; border-radius:999px; transition:width .3s; background:linear-gradient(90deg,#a78bfa,#f472b6); }
+  .options-row { display:flex; gap:.55rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .toggle-btn { background:var(--surface2); border:1px solid var(--border); border-radius:999px; color:var(--muted); font-size:.78rem; padding:.38rem .82rem; cursor:pointer; transition:all .2s; }
+  .toggle-btn.on { background:var(--surface3); color:var(--text); border-color:var(--muted); }
+  .quiz-card { background:var(--surface); border:1px solid var(--border); border-radius:1.1rem; padding:1.35rem; margin-bottom:1rem; }
+  .quiz-q-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.68rem; }
+  .quiz-question { font-family:"Syne",sans-serif; font-size:1.12rem; font-weight:700; line-height:1.45; }
+  .quiz-hint { font-size:.86rem; color:var(--muted); margin-top:.72rem; font-style:italic; display:none; line-height:1.45; }
+  .quiz-hint.show { display:block; }
+  .answer-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:.72rem; padding:.9rem 1rem; color:var(--text); font-size:1rem; margin-top:1rem; outline:none; transition:border-color .2s,background .2s; }
+  .answer-input:focus { border-color:var(--muted); }
+  .answer-input.correct-input { border-color:var(--correct); background:rgba(81,207,102,.08); }
+  .answer-input.wrong-input { border-color:var(--wrong); background:rgba(255,107,107,.08); }
+  .feedback-box { border-radius:.72rem; padding:.8rem 1rem; margin-top:.72rem; font-size:.89rem; display:none; line-height:1.45; }
+  .feedback-box.show { display:block; }
+  .feedback-box.correct-fb { background:rgba(81,207,102,.1); border:1px solid rgba(81,207,102,.3); color:#a3f5b5; }
+  .feedback-box.wrong-fb { background:rgba(255,107,107,.1); border:1px solid rgba(255,107,107,.3); color:#ffb3b3; }
+  .quiz-controls { display:flex; gap:.7rem; flex-wrap:wrap; }
+  .btn { font-family:"Syne",sans-serif; font-weight:700; font-size:.9rem; padding:.78rem 1.2rem; border-radius:.72rem; border:none; cursor:pointer; transition:all .2s; min-height:44px; }
+  .btn-primary { background:linear-gradient(135deg,#a78bfa,#f472b6); color:#fff; flex:1; }
+  .btn-primary:hover { opacity:.94; transform:translateY(-1px); }
+  .btn-secondary { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+  .btn-secondary:hover { color:var(--text); }
+  #results { padding:2rem 1.2rem; align-items:center; justify-content:center; text-align:center; }
+  .results-emoji { font-size:3.4rem; margin-bottom:1rem; }
+  .results-title { font-family:"Syne",sans-serif; font-size:1.85rem; font-weight:800; margin-bottom:.5rem; }
+  .results-score { font-size:1.05rem; color:var(--muted); margin-bottom:1.5rem; }
+  .results-score span { color:var(--text); font-weight:800; }
+  .wrong-list { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1.1rem; margin-bottom:1.35rem; width:100%; max-width:620px; text-align:left; max-height:44vh; overflow:auto; }
+  .wrong-list h3 { font-family:"Syne",sans-serif; font-size:.95rem; margin-bottom:.75rem; color:var(--wrong); }
+  .wrong-item { font-size:.86rem; padding:.65rem 0; border-bottom:1px solid var(--border); line-height:1.45; }
+  .wrong-item:last-child { border-bottom:none; }
+  .wrong-item .wq { color:var(--muted); font-size:.8rem; margin-bottom:.25rem; }
+  .wrong-item .wa { color:#a3f5b5; }
+  .results-btns { display:flex; flex-direction:column; gap:.7rem; width:100%; max-width:310px; }
+  .study-grid { display:grid; gap:.85rem; }
+  .study-card { background:var(--surface); border:1px solid var(--border); border-radius:1rem; padding:1rem; }
+  .study-card h3 { font-family:"Syne",sans-serif; margin-bottom:.45rem; }
+  .study-card p { color:var(--muted); line-height:1.5; font-size:.9rem; }
+  @media (min-width:720px) {
+    .subjects-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .mega-card { grid-column:span 3; }
+  }
+</style>
+</head>
+<body>
+
+<div id="hub" class="screen active">
+  <div class="hub-header">
+    <div class="hub-badge">Year 7 · Q3 Revision</div>
+    <h1 class="hub-title">Revise<span>It</span></h1>
+    <p class="hub-sub">Photo notes turned into proper quizzes. Pick a subject, choose a cycle, or go full chaos with the mega quiz.</p>
+    <div class="hub-tools">
+      <button class="btn btn-primary" onclick="startMega()">Mega Quiz</button>
+      <button class="btn btn-secondary" onclick="openStudy()">Study Map</button>
+    </div>
+  </div>
+  <div class="subjects-grid" id="subjects-grid"><div class="subject-card" style="--accent: var(--science);"><span class="subj-icon">🔬</span>
+      <div class="subj-name">Science</div>
+      <div class="subj-count">4 cycles · 80 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--english);"><span class="subj-icon">📖</span>
+      <div class="subj-name">English</div>
+      <div class="subj-count">3 cycles · 48 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--spanish);"><span class="subj-icon">🇪🇸</span>
+      <div class="subj-name">Spanish</div>
+      <div class="subj-count">4 cycles · 69 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--maths);"><span class="subj-icon">🔢</span>
+      <div class="subj-name">Maths</div>
+      <div class="subj-count">4 cycles · 48 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--geography);"><span class="subj-icon">🌍</span>
+      <div class="subj-name">Geography</div>
+      <div class="subj-count">4 cycles · 61 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--history);"><span class="subj-icon">📜</span>
+      <div class="subj-name">History</div>
+      <div class="subj-count">3 cycles · 41 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--food);"><span class="subj-icon">🍳</span>
+      <div class="subj-name">Food</div>
+      <div class="subj-count">1 cycle · 18 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--computing);"><span class="subj-icon">💻</span>
+      <div class="subj-name">Computing</div>
+      <div class="subj-count">1 cycle · 14 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card" style="--accent: var(--rs);"><span class="subj-icon">🕯️</span>
+      <div class="subj-name">R.S.</div>
+      <div class="subj-count">1 cycle · 18 questions</div>
+      <div class="tiny-row">Q3 photo pack content</div></div><div class="subject-card mega-card"><span class="subj-icon">⚡</span>
+    <div class="subj-name">Mega Quiz - Everything</div>
+    <div class="subj-count">All Q3 subjects combined · 397 questions</div></div></div>
+</div>
+
+<div id="cycles" class="screen" style="--accent: var(--geography);">
+  <button class="back-btn" onclick="goHub()">← Back</button>
+  <div class="cycles-header">
+    <div class="cycles-eyebrow" id="cycles-eyebrow" style="color: var(--geography);">🌍 Geography</div>
+    <div class="cycles-title" id="cycles-title">Choose a Cycle</div>
+    <p class="cycles-sub" id="cycles-sub">Fantastic places, maps, UK locations, coasts, rivers and settlement.</p>
+  </div>
+  <div class="cycles-list" id="cycles-list"><div class="cycle-card" style="--accent: var(--geography);"><div class="cycle-info"><div class="cycle-name" style="color:var(--geography)">All Geography</div><div class="cycle-topic">Everything in this subject · 61 questions</div></div><div class="cycle-arrow">⚡</div></div><div class="cycle-card" style="--accent: var(--geography);"><div class="cycle-info"><div class="cycle-name" style="color:var(--geography)">Cycle 1</div><div class="cycle-topic">What Are Fantastic Places? · 14 questions</div></div><div class="cycle-arrow">→</div></div><div class="cycle-card" style="--accent: var(--geography);"><div class="cycle-info"><div class="cycle-name" style="color:var(--geography)">Cycle 2</div><div class="cycle-topic">Maps and UK Locations · 15 questions</div></div><div class="cycle-arrow">→</div></div><div class="cycle-card" style="--accent: var(--geography);"><div class="cycle-info"><div class="cycle-name" style="color:var(--geography)">Cycle 3</div><div class="cycle-topic">What Makes Britain Beautiful? · 18 questions</div></div><div class="cycle-arrow">→</div></div><div class="cycle-card" style="--accent: var(--geography);"><div class="cycle-info"><div class="cycle-name" style="color:var(--geography)">Cycle 4</div><div class="cycle-topic">People, Cities and Settlement · 14 questions</div></div><div class="cycle-arrow">→</div></div></div>
+</div>
+
+<div id="study" class="screen">
+  <button class="back-btn" onclick="goHub()">← Back</button>
+  <div class="cycles-header">
+    <div class="cycles-eyebrow">66 source photos analysed</div>
+    <div class="cycles-title">Study Map</div>
+    <p class="cycles-sub">The photo pack has been converted into these subject sections and cycle categories.</p>
+  </div>
+  <div class="study-grid" id="study-grid"></div>
+</div>
+
+<div id="quiz" class="screen">
+  <div class="quiz-top">
+    <button class="quiz-back" onclick="goBack()">←</button>
+    <div class="quiz-scores">
+      <div class="score-badge correct">✓ <span id="score-c">0</span></div>
+      <div class="score-badge wrong">✗ <span id="score-w">0</span></div>
+    </div>
+  </div>
+  <div class="quiz-progress"><div class="quiz-progress-bar" id="progress-bar"></div></div>
+  <div class="options-row">
+    <button class="toggle-btn" id="hint-toggle" onclick="toggleHint()">Hints</button>
+    <button class="toggle-btn" id="shuffle-toggle" onclick="toggleShuffle()">Shuffle</button>
+    <button class="toggle-btn" id="strict-toggle" onclick="toggleStrict()">Strict</button>
+  </div>
+  <div class="quiz-card">
+    <div class="quiz-q-label" id="q-label"></div>
+    <div class="quiz-question" id="q-text"></div>
+    <div class="quiz-hint" id="q-hint"></div>
+    <input type="text" class="answer-input" id="answer-input" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')checkAnswer()">
+    <div class="feedback-box" id="feedback-box"></div>
+  </div>
+  <div class="quiz-controls">
+    <button class="btn btn-secondary" onclick="toggleHint()">Hint</button>
+    <button class="btn btn-primary" id="main-btn" onclick="handleBtn()">Check Answer</button>
+  </div>
+</div>
+
+<div id="results" class="screen">
+  <div class="results-emoji" id="results-emoji"></div>
+  <div class="results-title" id="results-title"></div>
+  <div class="results-score" id="results-score"></div>
+  <div class="wrong-list" id="wrong-list"></div>
+  <div class="results-btns">
+    <button class="btn btn-primary" onclick="retryQuiz()">Retry Quiz</button>
+    <button class="btn btn-secondary" onclick="goHub()">← All Subjects</button>
+  </div>
+</div>
+
+<script>
+const SUBJECTS = {
+  science: {
+    name:"Science", icon:"🔬", color:"var(--science)", note:"Cells, energy, light, electricity, food, filtration and the Earth.",
+    cycles:[
+      { id:"sci-c1", name:"Cycle 1", topic:"Biology, Chemistry and Physics Basics", questions:[
+        qa("What does a plant cell contain that animal cells do not?","Cell wall, vacuole and chloroplasts","Plant-only parts help with support, storage and photosynthesis."),
+        qa("What is the function of the nucleus?","Controls the activities of the cell and contains genetic material","Think control centre."),
+        qa("What is a specialised cell?","A cell that has been differentiated to carry out a particular function","Examples include blood, nerve, egg, root hair and sperm cells."),
+        qa("What are the four main functions of the skeleton?","Protection, support, movement and blood cell production","The photo notes list these as the big four."),
+        qa("What type of joint works like a door opening and closing?","Hinge joint","Elbow and knee are examples."),
+        qa("What type of joint allows movement in all directions and rotation?","Ball and socket joint","Hip and shoulder are examples."),
+        qa("What is diffusion?","The movement of substances from a high concentration to a low concentration","It is passive spreading out."),
+        qa("What is an element?","A substance made up of only one type of atom","Gold and oxygen are examples."),
+        qa("What is a compound?","A substance made of two or more different elements chemically bonded","Water is a compound."),
+        qa("What is a mixture?","Substances that are not chemically bonded and can be separated","Sand and sulphur can be separated."),
+        qa("How are particles arranged in a solid?","Closely packed together in a fixed shape","They vibrate but stay in place."),
+        qa("What process changes solid to liquid?","Melting","Solid to liquid."),
+        qa("What process changes gas to liquid?","Condensation","Gas cools down."),
+        qa("What process changes liquid to gas?","Evaporation","Liquid gains energy."),
+        qa("What is a non-renewable energy source?","An energy source that will run out and cannot be replaced quickly","Coal, oil and natural gas are examples."),
+        qa("What is a renewable energy source?","An energy source that can be replaced and will not run out in normal use","Solar, wind and hydroelectric power are examples."),
+        qa("Why are fossil fuels a problem when burned?","They release carbon dioxide and contribute to global warming","They can also release sulphur dioxide."),
+        qa("What does a power station do?","Generates electricity from an energy source","Usually by turning a generator."),
+        qa("What is an energy store?","A type of energy stored by an object or system","Thermal, kinetic and chemical are examples."),
+        qa("What is energy conservation?","Energy cannot be created or destroyed, only transferred","A law of energy.")
+      ]},
+      { id:"sci-c2", name:"Cycle 2", topic:"Plants, Animals, Light, Earth and Circuits", questions:[
+        qa("What is photosynthesis?","The process where plants use sunlight, water and carbon dioxide to make glucose and oxygen","It happens mainly in leaves."),
+        qa("What is the word equation for photosynthesis?","Carbon dioxide plus water makes glucose plus oxygen","Light and chlorophyll are needed."),
+        qa("What does chlorophyll do?","Absorbs light energy for photosynthesis","It is the green pigment in chloroplasts."),
+        qa("What is the function of stomata?","Pores in leaves that open and close to let carbon dioxide in and oxygen out","They control gas exchange."),
+        qa("What is the function of the iris?","Controls the size of the pupil and how much light enters the eye","It adjusts the pupil."),
+        qa("What is the function of the lens?","Focuses light onto the retina","The lens sits behind the iris and pupil."),
+        qa("What is the retina?","A layer at the back of the eye that transforms light into electrical signals","Signals travel to the brain."),
+        qa("What is reflection?","When light bounces off a surface","A mirror reflects light."),
+        qa("State the law of reflection.","The angle of incidence equals the angle of reflection","Both angles are measured from the normal."),
+        qa("What is refraction?","When light changes speed and bends as it passes between substances","For example from air into glass."),
+        qa("What is a volcano?","An opening in the Earth's crust that allows magma, ash and gases to escape","Lava is magma at the surface."),
+        qa("What are igneous rocks formed from?","Cooled and solidified magma or lava","Cooling makes crystals."),
+        qa("What are sedimentary rocks formed from?","Sediments that are compacted and cemented together","Examples include chalk, limestone and sandstone."),
+        qa("What are metamorphic rocks?","Rocks changed by heat and pressure","They do not melt during the process."),
+        qa("What is current?","The flow of electric charge around a circuit","Measured in amps."),
+        qa("What is voltage?","The difference in electrical energy between two points in a circuit","Measured in volts."),
+        qa("What unit is resistance measured in?","Ohms","The symbol is omega."),
+        qa("What is a series circuit?","A circuit with one loop for the current to follow","Current is the same everywhere."),
+        qa("What is a parallel circuit?","A circuit with more than one branch for current to follow","Potential difference is the same across each branch."),
+        qa("Where should an ammeter be placed?","In series with the component","It measures current.")
+      ]},
+      { id:"sci-c3", name:"Cycle 3", topic:"Filtration, Distillation, Solubility, Electricity and Pregnancy", questions:[
+        qa("What is filtration used for?","Separating an insoluble solid from a liquid","The solid stays as residue in the filter paper."),
+        qa("What is the filtrate?","The liquid that passes through the filter paper","The residue is left behind."),
+        qa("What is simple distillation used for?","Separating a solvent from a solution","It uses evaporation and condensation."),
+        qa("In distillation, why does the solvent evaporate first?","It has a lower boiling point than the solute","Water evaporates from salt solution."),
+        qa("What is fractional distillation used for?","Separating a mixture of liquids with different boiling points","For example water and ethanol."),
+        qa("What is solubility?","The maximum mass of solute that dissolves in a certain volume of solvent","Often measured per 100 g of water."),
+        qa("What does saturated mean?","When a solution cannot dissolve any more solute","It is full."),
+        qa("What does unsaturated mean?","When a solution can dissolve more solute","More solute can still be added."),
+        qa("What effect does increasing temperature usually have on solubility?","Solids usually become more soluble as temperature increases","Hot water dissolves more than cold water."),
+        qa("What is a solute?","A substance that can dissolve in a liquid","Salt in salt water is the solute."),
+        qa("What is a solvent?","The liquid that dissolves another substance","Water is a common solvent."),
+        qa("What is a solution?","A mixture formed when a solvent dissolves a solute","Salt water is a solution."),
+        qa("What is the unit of current?","Amps","A is the symbol."),
+        qa("What is the unit of voltage?","Volts","V is the symbol."),
+        qa("Where should a voltmeter be connected?","In parallel with a component","It measures voltage across a component."),
+        qa("What does a resistor do in a circuit?","Acts against the flow of current","Higher resistance makes current harder to flow."),
+        qa("What happens to current in a series circuit?","Current is the same everywhere","There is only one path."),
+        qa("What is the first stage of labour?","Dilation of the cervix","The cervix widens to about 10 cm."),
+        qa("What is the second stage of labour?","Birth of the baby","The baby is pushed through the vaginal opening."),
+        qa("What is the third stage of labour?","Delivery of the placenta","Also called the afterbirth.")
+      ]},
+      { id:"sci-c4", name:"Cycle 4", topic:"Food, Waves, Light, DNA and Development", questions:[
+        qa("What are the 4 Cs of food hygiene?","Cooking, cleaning, chilling and cross-contamination","The food sheet lists these as the safety steps."),
+        qa("What is cross-contamination?","When bacteria are transferred from one place to another","It can happen via hands, boards, aprons or equipment."),
+        qa("What is the food danger zone?","5 to 63 degrees Celsius","Bacteria multiply quickly in this range."),
+        qa("What colour chopping board is used for raw meat?","Red","Blue is raw fish, yellow cooked meat, green salad and fruit, brown vegetables."),
+        qa("What is binary fission?","When a single-cell bacterium divides to make two new cells","It can happen quickly in the right conditions."),
+        qa("What are four conditions for bacterial growth?","Food, warmth, moisture and time","Bacteria need suitable conditions."),
+        qa("What is a food allergy?","When the immune system reacts to a specific food","It can be life-threatening."),
+        qa("What is a wave?","A way of transferring energy by vibrations or oscillations","Light and sound are waves."),
+        qa("What is frequency?","How many complete waves pass a point every second","Measured in hertz."),
+        qa("What is wavelength?","The distance between two consecutive peaks or troughs","Usually shown with lambda."),
+        qa("What is amplitude?","The maximum distance a particle moves from its starting point","Larger amplitude means more energy."),
+        qa("What is compression in a longitudinal wave?","An area of high pressure where particles are bunched together","Sound waves have compressions."),
+        qa("What is rarefaction in a longitudinal wave?","An area of low pressure where particles are spread out","Opposite of compression."),
+        qa("Which colour of visible light has the longest wavelength?","Red","It refracts the least."),
+        qa("Which colour of visible light has the shortest wavelength?","Violet","It refracts the most."),
+        qa("What is DNA?","An essential molecule that carries instructions for life","It tells bodies how to develop and function."),
+        qa("What are the four bases in DNA?","Adenine, thymine, cytosine and guanine","A, T, C and G."),
+        qa("What shape is DNA?","A double helix","Like a twisted ladder."),
+        qa("What are genes?","Sets of instructions in DNA that tell cells how to make proteins","Genes affect characteristics."),
+        qa("What is the placenta?","An organ that exchanges substances between mother and baby","It connects through the umbilical cord.")
+      ]}
+    ]
+  },
+  english: {
+    name:"English", icon:"📖", color:"var(--english)", note:"Crafting texts, language devices, Shakespeare and English history.",
+    cycles:[
+      { id:"eng-c1", name:"Cycle 1", topic:"How Do I Craft Texts?", questions:[
+        qa("What is a simile?","Comparing two things using as or like","Example: as brave as a lion."),
+        qa("What is a metaphor?","A direct comparison without as or like","Example: he is a lion."),
+        qa("What is personification?","Giving human characteristics to non-living things or objects","The wind howled."),
+        qa("What is imagery?","Highly descriptive or figurative language","It creates a picture in the reader's mind."),
+        qa("What is a triplet?","A set of three adjectives, verbs, adverbs or phrases in a row","Three for emphasis."),
+        qa("What is repetition?","Repeating a word or phrase","It can create emphasis or rhythm."),
+        qa("What is a list?","Four or more words or phrases in a row","Often used to build detail."),
+        qa("What is pathetic fallacy?","Weather that creates or reflects mood or tone","Storms can suggest danger."),
+        qa("What is a semantic field?","A group of words linked to one topic","For example words about war."),
+        qa("What is a rhetorical question?","An unanswered question that provokes thought","Used in persuasion."),
+        qa("What is emotive language?","Language that evokes an emotional response","It makes the reader feel something."),
+        qa("What are statistics?","Numerical data used to support a point","Facts and figures."),
+        qa("What is an anecdote?","A short description or account of an event","A small story."),
+        qa("What is hyperbole?","Extreme exaggeration","I've told you a million times."),
+        qa("What is ethos?","Appealing to community values, morals or ethics","It builds trust."),
+        qa("What is pathos?","Appealing to emotions","It makes the audience feel."),
+        qa("What is logos?","Appealing to logic or reasoning","It uses facts and argument.")
+      ]},
+      { id:"eng-c2", name:"Cycle 2", topic:"History of English and Tragedy", questions:[
+        qa("What is animal imagery?","Giving non-animal objects animal characteristics","Different from personification."),
+        qa("What is symbolism?","An image which represents a hidden deeper meaning","A dove can symbolise peace."),
+        qa("What is a motif?","A recurring symbol or image","It appears repeatedly."),
+        qa("What is an allusion?","A reference to a well-known event, person or myth","It points outside the text."),
+        qa("What is allegory?","A narrative with a hidden meaning","Often moral, political or religious."),
+        qa("What is foreshadowing?","A hint at a later event","It prepares the reader."),
+        qa("What is contrast?","Two different ideas or images placed together","Light and dark is a common contrast."),
+        qa("What is a tragic hero?","The main character in a tragedy who has a tragic flaw","A high-status character who falls."),
+        qa("What is tragedy?","A genre of drama based on human suffering or downfall","Often ends in death."),
+        qa("What is hamartia?","The tragic flaw that leads to downfall","A key tragic hero feature."),
+        qa("What is anagnorisis?","Delayed recognition of mistakes by the tragic hero","The moment of realisation."),
+        qa("What is peripeteia?","A sudden reversal of fortune or circumstance","A turning point from good to bad."),
+        qa("What is regicide?","The killing of a monarch","A king or queen is murdered."),
+        qa("What is natural order?","The hierarchy God, state, man, woman and nature","An old belief about society."),
+        qa("What is patriarchy?","A society controlled or dominated by men","A key contextual term."),
+        qa("What is archetype?","A typical example of a character, setting or story pattern","A repeated model."),
+        qa("What is form in literature?","The type or genre of a text","For example tragedy or comedy."),
+        qa("What is structure?","The way a text is organised","For example scenes, chapters or dialogue."),
+        qa("What is theme?","A main idea in a text","Love, power or fate can be themes.")
+      ]},
+      { id:"eng-c3", name:"Cycle 3", topic:"Shakespeare Influenced Literature", questions:[
+        qa("What is comedy as a Shakespearean play type?","A play based on fate, confusion, reunion and mistaken identity","It usually ends happily."),
+        qa("What is history as a Shakespearean play type?","Drama based on historical events and social commentary","It dramatises real events."),
+        qa("What is a tragic flaw?","A weakness or mistake that leads to a hero's downfall","Hamartia is another term."),
+        qa("What does high status mean in tragedy?","A character has importance, power or rank","Tragic heroes are usually high status."),
+        qa("What does supernatural mean?","Events or beings beyond natural explanation","Ghosts and witches are examples."),
+        qa("What is a soliloquy?","A speech where a character speaks their thoughts aloud, usually alone","It reveals inner feelings."),
+        qa("What is dialogue?","Conversation between characters","Characters speak to each other."),
+        qa("What is stage direction?","Instruction in a play script about action, setting or delivery","It guides performance."),
+        qa("What does audience mean in drama?","The people watching or reading the play","Playwrights shape their response."),
+        qa("What is dramatic irony?","When the audience knows something a character does not","It creates tension."),
+        qa("What is blank verse?","Unrhymed lines usually in iambic pentameter","Used often by Shakespeare."),
+        qa("What is iambic pentameter?","A poetic rhythm with five beats per line","Often da-DUM repeated five times.")
+      ]}
+    ]
+  },
+  spanish: {
+    name:"Spanish", icon:"🇪🇸", color:"var(--spanish)", note:"Opinions, school, time, weather, food, entertainment and daily life.",
+    cycles:[
+      { id:"esp-c1", name:"Cycle 1", topic:"Opinions, Adjectives and School", questions:[
+        qa("How do you say 'I love' in Spanish?","Me encanta","Opinion phrase."),
+        qa("How do you say 'I like' in Spanish?","Me gusta","Opinion phrase."),
+        qa("How do you say 'I don't like' in Spanish?","No me gusta","Negative opinion."),
+        qa("How do you say 'I prefer' in Spanish?","Prefiero","Opinion phrase."),
+        qa("How do you say 'boring' in Spanish?","Aburrido","Adjective."),
+        qa("How do you say 'active' in Spanish?","Activo","Adjective."),
+        qa("How do you say 'interesting' in Spanish?","Interesante","Adjective."),
+        qa("How do you say 'difficult' in Spanish?","Difícil","Adjective."),
+        qa("How do you say 'easy' in Spanish?","Fácil","Adjective."),
+        qa("How do you say 'useful' in Spanish?","Útil","Adjective."),
+        qa("How do you say 'I study in the library'?","Estudio en la biblioteca","School activity."),
+        qa("How do you say 'I play tennis'?","Juego al tenis","Activity."),
+        qa("How do you say 'I listen to music'?","Escucho música","Free time phrase."),
+        qa("How do you say 'I go to the cinema'?","Voy al cine","Free time phrase."),
+        qa("How do you say 'my favourite subject is...' in Spanish?","Mi asignatura favorita es...","Subject phrase."),
+        qa("How do you say 'because' in Spanish?","Porque","Conjunction.")
+      ]},
+      { id:"esp-c2", name:"Cycle 2", topic:"Family, Time and Frequency", questions:[
+        qa("How do you say 'my' in Spanish?","Mi","Possessive adjective."),
+        qa("How do you say 'your' in Spanish singular?","Tu","Possessive adjective."),
+        qa("How do you say 'his/her' in Spanish?","Su","Possessive adjective."),
+        qa("How do you say 'mother' in Spanish?","Madre","Family vocabulary."),
+        qa("How do you say 'father' in Spanish?","Padre","Family vocabulary."),
+        qa("How do you say 'brother' in Spanish?","Hermano","Family vocabulary."),
+        qa("How do you say 'sister' in Spanish?","Hermana","Family vocabulary."),
+        qa("How do you say 'I live with' in Spanish?","Vivo con","Family relationships."),
+        qa("How do you say 'I get on well with' in Spanish?","Me llevo bien con","Relationship phrase."),
+        qa("How do you say 'I don't get on well with' in Spanish?","No me llevo bien con","Relationship phrase."),
+        qa("How do you say 'I argue with' in Spanish?","Discuto con","Relationship phrase."),
+        qa("How do you say 'it is one o'clock'?","Es la una","Time phrase."),
+        qa("How do you say 'it is two o'clock'?","Son las dos","Time phrase."),
+        qa("How do you say 'at ten o'clock'?","A las diez","Time phrase."),
+        qa("How do you say 'at midday'?","A mediodía","Time phrase."),
+        qa("How do you say 'always' in Spanish?","Siempre","Frequency expression."),
+        qa("How do you say 'every day' in Spanish?","Todos los días","Frequency expression."),
+        qa("How do you say 'never' in Spanish?","Nunca","Frequency expression.")
+      ]},
+      { id:"esp-c3", name:"Cycle 3", topic:"Food, Weather and Daily Life", questions:[
+        qa("How do you say 'I eat' in Spanish?","Como","Food verb."),
+        qa("How do you say 'I drink' in Spanish?","Bebo","Food verb."),
+        qa("How do you say 'I take' in Spanish?","Tomo","Food verb."),
+        qa("How do you say 'chicken' in Spanish?","Pollo","Food vocabulary."),
+        qa("How do you say 'rice' in Spanish?","Arroz","Food vocabulary."),
+        qa("How do you say 'meat' in Spanish?","Carne","Food vocabulary."),
+        qa("How do you say 'fish' in Spanish?","Pescado","Food vocabulary."),
+        qa("How do you say 'cheese' in Spanish?","Queso","Food vocabulary."),
+        qa("How do you say 'ice cream' in Spanish?","Helado","Food vocabulary."),
+        qa("How do you say 'sandwich' in Spanish?","Un bocadillo","Food vocabulary."),
+        qa("How do you say 'the weather is good'?","Hace buen tiempo","Weather phrase."),
+        qa("How do you say 'the weather is bad'?","Hace mal tiempo","Weather phrase."),
+        qa("How do you say 'it is raining'?","Llueve","Weather phrase."),
+        qa("How do you say 'it is cold'?","Hace frío","Weather phrase."),
+        qa("How do you say 'it is hot'?","Hace calor","Weather phrase."),
+        qa("How do you say 'Easter Sunday'?","Domingo de Pascua","Easter vocabulary."),
+        qa("How do you say 'traditional clothes'?","Ropa tradicional","Easter vocabulary.")
+      ]},
+      { id:"esp-c4", name:"Cycle 4", topic:"Entertainment and Comparatives", questions:[
+        qa("How do you say 'I listen' in Spanish?","Escucho","Verb."),
+        qa("How do you say 'I watch' in Spanish?","Veo","Verb."),
+        qa("How do you say 'I play' in Spanish?","Juego","Verb."),
+        qa("How do you say 'I do' in Spanish?","Hago","Verb."),
+        qa("How do you say 'to eat' in Spanish?","Comer","Infinitive verb."),
+        qa("How do you say 'to drink' in Spanish?","Beber","Infinitive verb."),
+        qa("How do you say 'to live' in Spanish?","Vivir","Infinitive verb."),
+        qa("How do you say 'to have' in Spanish?","Tener","Infinitive verb."),
+        qa("How do you say 'favourite' in Spanish?","Favorito","Adjective."),
+        qa("How do you say 'bad' in Spanish?","Malo","Adjective."),
+        qa("How do you say 'healthy' in Spanish?","Sano","Adjective."),
+        qa("How do you say 'vegetarian' in Spanish?","Vegetariano","Adjective."),
+        qa("How do you say 'fresh' in Spanish?","Fresco","Adjective."),
+        qa("How do you say 'tired' in Spanish?","Cansado","Adjective."),
+        qa("How do you say 'however' in Spanish?","Sin embargo","Conjunction."),
+        qa("How do you say 'or' in Spanish?","O","Conjunction."),
+        qa("How do you say 'more than' in Spanish?","Más que","Comparative phrase."),
+        qa("How do you say 'less than' in Spanish?","Menos que","Comparative phrase.")
+      ]}
+    ]
+  },
+  maths: {
+    name:"Maths", icon:"🔢", color:"var(--maths)", note:"Powers, square roots, fractions, percentages, ratios and proportion.",
+    cycles:[
+      { id:"math-c1", name:"Cycle 1", topic:"Powers, Decimals and BIDMAS", questions:[
+        qa("What does index form mean?","How many times to use the base number in a multiplication","For example 5 to the power 3 means 5 x 5 x 5."),
+        qa("What is anything to the power of zero equal to?","1","Except special cases not used here."),
+        qa("What do you do when multiplying powers with the same base?","Add the powers","For example 4^3 x 4^5 = 4^8."),
+        qa("What do you do when dividing powers with the same base?","Subtract the powers","For example 6^10 divided by 6^2 = 6^8."),
+        qa("What do you do when raising a power to a power?","Multiply the powers","For example (9^2)^4 = 9^8."),
+        qa("What is the inverse of squaring?","Square root","The square root of 64 is 8."),
+        qa("What does BIDMAS stand for?","Brackets, indices, division, multiplication, addition and subtraction","Order of operations."),
+        qa("What is an estimate?","An approximate value found by rounding before calculating","Usually round to one significant figure."),
+        qa("What is a percentage?","A number expressed as a fraction over 100","Percent means out of 100."),
+        qa("How do you calculate 50 percent of a number?","Divide by 2","Half the number."),
+        qa("How do you calculate 25 percent of a number?","Divide by 4","A quarter of the number."),
+        qa("How do you calculate 1 percent of a number?","Divide by 100","One hundredth.")
+      ]},
+      { id:"math-c2", name:"Cycle 2", topic:"Can a Number Be Presented?", questions:[
+        qa("What is a prime number?","An integer with exactly two factors, 1 and itself","2, 3, 5 and 7 are prime."),
+        qa("What is a factor?","An integer that divides exactly into another integer with no remainder","Factors divide cleanly."),
+        qa("What is a multiple?","A number that appears in another number's times table","Multiples keep adding the same number."),
+        qa("What is the highest common factor?","The largest number that is a factor of each number","Also called HCF."),
+        qa("What is the lowest common multiple?","The first number that is a multiple of each number","Also called LCM."),
+        qa("What is the numerator?","The top number of a fraction","It shows the number of parts."),
+        qa("What is the denominator?","The bottom number of a fraction","It shows how many equal parts the whole is divided into."),
+        qa("What is a proper fraction?","A fraction where the numerator is smaller than the denominator","Less than 1."),
+        qa("What is an improper fraction?","A fraction where the numerator is greater than the denominator","Greater than 1."),
+        qa("What is a mixed number?","An integer plus a proper fraction","For example 2 and 1/5."),
+        qa("How do you add or subtract fractions?","Use a common denominator, then add or subtract the numerators","Denominators stay the same."),
+        qa("How do you multiply fractions?","Multiply the numerators and multiply the denominators","Top times top, bottom times bottom."),
+        qa("How do you simplify a fraction?","Cancel out all common factors","Keep the same proportion.")
+      ]},
+      { id:"math-c3", name:"Cycle 3", topic:"Break Up a Number", questions:[
+        qa("What are the first 10 prime numbers?","2, 3, 5, 7, 11, 13, 17, 19, 23, 29","The photo sheet lists these."),
+        qa("What is a fraction equivalent to 1?","A fraction where the numerator and denominator are equal","For example 5/5."),
+        qa("What does simplifying a fraction mean?","Writing it with the smallest possible integer parts","No common factors remain."),
+        qa("What does equivalent fractions mean?","Fractions that represent the same proportion of the whole","They may look different but have equal value."),
+        qa("What is directly proportional?","Both quantities increase or decrease at the same rate","One quantity follows the other."),
+        qa("What is inversely proportional?","One quantity increases while the other decreases at the same rate","Opposite movement."),
+        qa("What is the metric length conversion from metres to centimetres?","1 metre equals 100 centimetres","Length conversion."),
+        qa("What is the metric length conversion from kilometres to metres?","1 kilometre equals 1000 metres","Length conversion."),
+        qa("What is the metric weight conversion from kilograms to grams?","1 kilogram equals 1000 grams","Weight conversion."),
+        qa("What is the metric volume conversion from litres to millilitres?","1 litre equals 1000 millilitres","Volume conversion."),
+        qa("What is a ratio?","How much of one thing there is compared to another","3:5 means 3 parts to 5 parts."),
+        qa("What happens to percentage fee paid when money is borrowed?","It is added as interest","Interest is the fee.")
+      ]},
+      { id:"math-c4", name:"Cycle 4", topic:"Sharing and Ratios", questions:[
+        qa("What is a ratio in its simplest form?","A ratio with no common factors other than 1","All parts are simplified."),
+        qa("How do you keep a ratio equivalent?","Multiply or divide all parts by the same number","Ratios must use equal changes."),
+        qa("What does percentage change compare?","New value and original value","It shows increase or decrease."),
+        qa("What happens in directly proportional quantities?","Both quantities increase or decrease at the same rate","They move together."),
+        qa("What happens in inversely proportional quantities?","One quantity increases while the other decreases at the same rate","They move oppositely."),
+        qa("How do you convert a decimal to a percentage?","Multiply by 100","Move to percent."),
+        qa("How do you convert a percentage to a decimal?","Divide by 100","Move from percent."),
+        qa("How do you convert a fraction to a decimal?","Divide the numerator by the denominator","Top divided by bottom."),
+        qa("How do you find 15 percent of 200?","30","10 percent is 20 and 5 percent is 10."),
+        qa("How do you calculate percentage increase?","Find the increase, divide by the original value, then multiply by 100","Compare increase to original."),
+        qa("How do you calculate percentage decrease?","Find the decrease, divide by the original value, then multiply by 100","Compare decrease to original.")
+      ]}
+    ]
+  },
+  geography: {
+    name:"Geography", icon:"🌍", color:"var(--geography)", note:"Fantastic places, maps, UK locations, coasts, rivers and settlement.",
+    cycles:[
+      { id:"geo-c1", name:"Cycle 1", topic:"What Are Fantastic Places?", questions:[
+        qa("What is a continent?","A large land mass","There are 7: Asia, Africa, North America, South America, Antarctica, Europe and Oceania."),
+        qa("What is an ocean?","A large expanse of water","There are 5: Pacific, Atlantic, Indian, Southern and Arctic."),
+        qa("What is physical geography?","The study of natural environments and landforms","Rivers, rainforests and beaches are examples."),
+        qa("What is human geography?","The study of societies, cultures and economies","Population, tourism and cities are examples."),
+        qa("What is a compass used for?","Finding direction","North, east, south and west are main points."),
+        qa("What are grid references?","Squares that help map-readers locate a place","Use eastings and northings."),
+        qa("What are contour lines?","Lines on a map that join places of the same height","Close lines show steep land."),
+        qa("What is scale?","The relationship between distance on a map and real-life distance","It helps measure real distance."),
+        qa("What is relief?","The height and shape of the land","It can be shown with contours or layer shading."),
+        qa("What is latitude?","Lines that show how far north or south a place is from the Equator","They run parallel to the Equator."),
+        qa("What is longitude?","Lines that show how far east or west a place is from the Prime Meridian","They meet at the poles."),
+        qa("What is social geography about?","People, education and healthcare","It looks at society."),
+        qa("What is economic geography about?","Money, jobs and businesses","It looks at wealth and work."),
+        qa("What is environmental geography about?","The natural area or landscape","It includes waste and surroundings.")
+      ]},
+      { id:"geo-c2", name:"Cycle 2", topic:"Maps and UK Locations", questions:[
+        qa("What are the four countries of the United Kingdom?","England, Scotland, Wales and Northern Ireland","The UK is made up of four countries."),
+        qa("What is Great Britain?","England, Scotland and Wales","It is the official collective name of these islands."),
+        qa("Where is London?","England","It is the capital city of England and the UK."),
+        qa("Where is Cardiff?","Wales","It is the capital city of Wales."),
+        qa("Where is Edinburgh?","Scotland","It is the capital city of Scotland."),
+        qa("Where is Belfast?","Northern Ireland","It is the capital city of Northern Ireland."),
+        qa("What does a map key show?","What symbols on a map mean","The key explains features."),
+        qa("What are spot heights?","Exact heights shown by a black dot and number","They show height above sea level."),
+        qa("What is a triangulation pillar?","A marker showing one of the highest points of land","Often shown by a blue triangle on maps."),
+        qa("What is layer colouring?","Using colours to show height on a map","Green is often flatter, brown steeper or higher."),
+        qa("What do contour lines show?","Places of the same height","If close together the slope is steep."),
+        qa("What is a four-figure grid reference used for?","Finding the grid square a place is in","Go along the corridor and up the stairs."),
+        qa("What is a six-figure grid reference used for?","A more accurate location within a grid square","Imagine the square split into ten parts each way."),
+        qa("What is the string method used for?","Measuring curved distances on maps","Lay string along a route then measure it."),
+        qa("What is the paper method used for?","Measuring a curved distance by marking turns on paper","Pivot paper along the route.")
+      ]},
+      { id:"geo-c3", name:"Cycle 3", topic:"What Makes Britain Beautiful?", questions:[
+        qa("Where do the British Isles lie?","Off the north-western coast of mainland Europe","They include Great Britain, Ireland and many smaller islands."),
+        qa("What is geology?","The study of the physical features and history of Earth","Rocks and landforms are included."),
+        qa("What are igneous rocks?","Rocks formed from volcanic magma that cooled and solidified","They can be hard."),
+        qa("What are metamorphic rocks?","Rocks changed by heat or pressure","They are formed from other rocks."),
+        qa("What are sedimentary rocks?","Rocks formed from eroded remains that are compressed and joined together","They form in layers."),
+        qa("What is weathering?","Breakdown of rocks at the Earth's surface","Caused by weather, temperature or biological activity."),
+        qa("What is erosion?","The wearing away of rock and soil","Includes abrasion, attrition, hydraulic action and solution."),
+        qa("What is transportation in geography?","Movement of sediment by rivers, glaciers or oceans","Types include suspension, saltation, solution and traction."),
+        qa("What is deposition?","When transported material is dropped in a new location","It happens when energy decreases."),
+        qa("What is a glacier?","A slowly moving body of ice formed by build-up and compaction of snow","It erodes and transports material."),
+        qa("What is a corrie?","An armchair-shaped hollow high in a mountain with steep back and side walls","Formed by glacial erosion."),
+        qa("What is an air mass?","A large volume of air that travels from one area to another","It affects weather."),
+        qa("What is a prevailing wind?","The dominant wind direction in an area","In the UK it is usually south-west."),
+        qa("What is a river source?","Where a river begins","Usually in hills or mountains."),
+        qa("What is a river mouth?","Where a river enters a sea, ocean or lake","The end of the river."),
+        qa("What is a waterfall?","Where a river flows over hard rock and drops vertically","It may form a plunge pool."),
+        qa("What is a gorge?","A steep-sided valley left where a waterfall once was","It forms as the waterfall retreats upstream."),
+        qa("What is a meander?","A bend in a river","Usually found in the middle or lower course.")
+      ]},
+      { id:"geo-c4", name:"Cycle 4", topic:"People, Cities and Settlement", questions:[
+        qa("What is population?","The number of people in a certain area","It can increase or decrease."),
+        qa("What is population density?","The number of people living in a certain area per square kilometre","High density means crowded."),
+        qa("What is migration?","The movement of people from one location to another","It can be internal or international."),
+        qa("What is urbanisation?","An increase in the proportion of people living in towns and cities","Cities grow."),
+        qa("What is a squatter settlement?","An area of poor-quality housing around city edges in less developed countries","Residents often lack basic services."),
+        qa("What are push factors?","Reasons that encourage someone to leave a place","War, famine or lack of jobs."),
+        qa("What are pull factors?","Reasons that attract someone to a place","Jobs, healthcare or education."),
+        qa("Why do more people live in cities?","Jobs, healthcare, education and services are often more available","These are pull factors."),
+        qa("What are advantages of self-help schemes?","They allow local people to improve homes and skills","Redevelopment can improve accommodation."),
+        qa("What is an economic activity?","An activity that creates jobs and generates income","Industry is one example."),
+        qa("What is a primary industry?","Extracting raw materials","Mining and farming are examples."),
+        qa("What is a secondary industry?","Manufacturing raw materials into products","Making goods."),
+        qa("What is a tertiary industry?","Providing a service","Healthcare and education are examples."),
+        qa("What is a quaternary industry?","High-tech or knowledge-based work","Research and computing are examples.")
+      ]}
+    ]
+  },
+  history: {
+    name:"History", icon:"📜", color:"var(--history)", note:"Renaissance, Reformation, Tudor England and religious change.",
+    cycles:[
+      { id:"hist-c1", name:"Cycle 1", topic:"Medieval and Renaissance Change", questions:[
+        qa("What does Black Death refer to?","A plague epidemic that arrived in England in 1348 and killed about one third of the population","It transformed medieval society."),
+        qa("What were short-term effects of the Black Death?","Fear, suffering, not enough workers, dead or abandoned places","Immediate impacts."),
+        qa("What were long-term effects of the Black Death?","Loss of faith, labour shortage, end of feudalism and Renaissance ideas","Longer-term change."),
+        qa("What does Renaissance mean?","Rebirth","A period when classical ideas were rediscovered and challenged."),
+        qa("Why was the printing press important?","It allowed books to be printed quickly and ideas to spread","Gutenberg invented a press in 1440."),
+        qa("Who were literate monks?","Monks who could speak Latin and copy Catholic books by hand","Before printing, copying was slow."),
+        qa("What was Vesalius known for?","Illustrating accurate human anatomy and contradicting Galen","He used dissection."),
+        qa("Who was Galen?","A Roman doctor who believed in the four humours and drew anatomical ideas from animals","Some of his ideas were wrong."),
+        qa("What were the four humours?","Blood, phlegm, yellow bile and black bile","Illness was thought to come from imbalance."),
+        qa("What is purgatory?","A place between death and heaven where suffering happens before entry to heaven","A Catholic belief."),
+        qa("What was an indulgence?","A document bought from the Church to reduce time in purgatory","It was criticised by reformers."),
+        qa("What was Reformation?","A movement where people wanted to reform the Catholic Church","It led to Protestant churches."),
+        qa("Who was Martin Luther?","A reformer who nailed 95 theses to the church door in Wittenberg","He criticised indulgences."),
+        qa("What were the 95 Theses?","Martin Luther's arguments against Church practices","They spread using the printing press.")
+      ]},
+      { id:"hist-c2", name:"Cycle 2", topic:"Reformation and Henry VIII", questions:[
+        qa("What is a Catholic?","A Christian who follows the Pope and the Catholic Church","The Church was based in Rome."),
+        qa("What is a Protestant?","A Christian in a reformed version of Christianity separated from the Catholic Church","Formed during the Reformation."),
+        qa("Why did Henry VIII want to divorce Catherine of Aragon?","To marry a younger wife and try to have a son","Catherine had not produced a surviving male heir."),
+        qa("What was the Act of Supremacy?","A law passed in 1534 making Henry head of the Church in England instead of the Pope","It excluded him from Catholic authority."),
+        qa("What does excommunication mean?","Being excluded from the Catholic Church and heaven","A severe religious punishment."),
+        qa("What was the Act of Suppression?","Henry VIII's order that began the dissolution of the monasteries","It closed religious houses."),
+        qa("Who was Thomas Cromwell?","Henry VIII's adviser who surveyed the wealth of the Church in 1536","He helped dissolve monasteries."),
+        qa("What were monasteries?","Religious buildings that provided prayer, community and hospitality","They were run by monks and nuns."),
+        qa("Who were monks and nuns?","People who chose poverty, chastity and obedience in religious life","They lived in religious communities."),
+        qa("What was the Pilgrimage of Grace?","An uprising in northern England against Henry's religious changes","It was led by Robert Aske."),
+        qa("Who was Robert Aske?","Leader of the Pilgrimage of Grace who was hanged in chains in 1537","He faced the Duke of Norfolk at Doncaster."),
+        qa("What was the Book of Common Prayer?","Edward VI's act of uniformity making Protestantism compulsory in England","It standardised worship."),
+        qa("What were Edward's Poor Laws?","Laws making unemployment illegal and starting government poor relief","Local poor money was collected."),
+        qa("What happened under Bloody Mary?","Many Protestants were burned during Mary I's reign","She restored Catholicism.")
+      ]},
+      { id:"hist-c3", name:"Cycle 3", topic:"Tudor England and Elizabeth I", questions:[
+        qa("What was the Book of Martyrs?","A Protestant historian's record of Protestant martyrdom","John Foxe recorded burnings."),
+        qa("What was Elizabeth's Act of Supremacy in 1559?","It made her governor of the Church of England","She controlled the church."),
+        qa("What was the Elizabethan middle way?","Elizabeth attempted to bring peace between Catholics and Protestants","A religious settlement."),
+        qa("What were fleas on rats linked to?","Spreading plague disease","A cause people later understood."),
+        qa("What was the theory of the four humours?","Illness was caused by imbalance of four substances in the body","Blood, phlegm and bile types."),
+        qa("What is a vesalius-style contribution to medicine?","Using accurate human dissection and anatomy","It challenged older beliefs."),
+        qa("What is classical knowledge?","Ideas from ancient Greece and Rome","Renaissance thinkers rediscovered and challenged them."),
+        qa("What does Catholic reform mean?","Changing the Catholic Church to fix problems","Some wanted reform, not a new church."),
+        qa("What does Protestant uniformity mean?","Making Protestant worship compulsory","Edward VI did this with the Act of Uniformity."),
+        qa("Why were many people confused during Tudor religious change?","England changed between Catholic and Protestant under different monarchs","Henry, Edward, Mary and Elizabeth changed religion."),
+        qa("What was Edward VI known for religiously?","Making England more Protestant","He introduced Protestant laws."),
+        qa("What was Mary I known for religiously?","Restoring Catholicism and burning Protestants","Nicknamed Bloody Mary."),
+        qa("What was Elizabeth I trying to achieve in religion?","A compromise to reduce conflict","The middle way.")
+      ]}
+    ]
+  },
+  food: {
+    name:"Food", icon:"🍳", color:"var(--food)", note:"Hygiene, safe preparation, nutrition and food vocabulary.",
+    cycles:[
+      { id:"food-c1", name:"Cycle 1", topic:"How Can We Ensure Our Food Is Nutritious and Safe?", questions:[
+        qa("What are the 4 Cs in food safety?","Cooking, cleaning, chilling and cross-contamination","The safety sheet lists these."),
+        qa("Why can bacteria be harmful?","They can cause disease and illness","Some microscopic organisms are dangerous."),
+        qa("What is cross-contamination?","Where bacteria are transferred from one place to another","Hands, hair, boards and equipment can spread it."),
+        qa("What is personal hygiene in food preparation?","Steps to prevent contamination like washing hands, tying hair back and wearing an apron","It keeps food safe."),
+        qa("What temperature range is the danger zone?","5 to 63 degrees Celsius","Bacteria multiply quickly in this range."),
+        qa("What is knife safety?","Carrying knives carefully, holding close to the food room, and passing handle first","Safe handling prevents injury."),
+        qa("What is the red chopping board used for?","Raw meat","Colour-coded boards prevent contamination."),
+        qa("What is the blue chopping board used for?","Raw fish","Colour-coded boards prevent contamination."),
+        qa("What is the yellow chopping board used for?","Cooked meat","Colour-coded boards prevent contamination."),
+        qa("What is the green chopping board used for?","Salad and fruit","Colour-coded boards prevent contamination."),
+        qa("What is the brown chopping board used for?","Vegetables","Colour-coded boards prevent contamination."),
+        qa("What are carbohydrates a source of?","Energy","Bread, pasta, potatoes and cereals."),
+        qa("What are good sources of protein?","Meat, poultry, beans, nuts, seeds, fish, eggs, Quorn, soya and tofu","Protein helps growth and repair."),
+        qa("What are sources of oils and spreads?","Olive oil, sunflower oil and spreads","They are fats."),
+        qa("What are sources of dairy?","Milk, cheese, butter, yoghurt, cream and dairy alternatives","Dairy helps bones."),
+        qa("What are sources of vitamins and minerals?","Fruits and vegetables","They support health."),
+        qa("What is food intolerance?","Difficulty digesting certain foods or ingredients","It is unpleasant but not the same as allergy."),
+        qa("What is a food allergy?","When the immune system reacts unusually to a food","It can be serious.")
+      ]}
+    ]
+  },
+  computing: {
+    name:"Computing", icon:"💻", color:"var(--computing)", note:"Online safety, cyberbullying, phishing, malware and scams.",
+    cycles:[
+      { id:"comp-c1", name:"Cycle 1", topic:"How Do We Stay Safe Online?", questions:[
+        qa("What is a computer virus?","A program that replicates itself and can transfer between computers","It can attach to files or programs."),
+        qa("What is cyberbullying?","Using the internet or phones to hurt, embarrass or harass another person","It can involve texts or images."),
+        qa("What is cyberstalking?","Using technology to harass an individual or group repeatedly","It targets people online."),
+        qa("What is grooming?","When a paedophile befriends and emotionally exploits a child online","It is a safeguarding danger."),
+        qa("What is hacking?","Illegal access to computer systems without permission","It can involve breaking into accounts."),
+        qa("What is happy slapping?","Taking and publishing pictures or videos of assault online","It is harmful and illegal."),
+        qa("What is illegal content?","Material against the law to view or publish","Includes extremist or abusive material."),
+        qa("What is pharming?","Collecting information from a computer using hidden means, often spyware","It steals data."),
+        qa("What is phishing?","A scam where victims are tricked into giving personal details","Often through email or text messages."),
+        qa("What is sexting?","Sending explicit pictures by multimedia text or phone messages","Usually self-portraits or selfies."),
+        qa("What is spyware?","Software that records activity and sends data back to a hacker","Can capture keystrokes and passwords."),
+        qa("What is a trojan?","Malware pretending to be legitimate software","It gives unauthorised access."),
+        qa("What is trolling?","Posting inflammatory messages to provoke emotional responses","It disrupts discussion."),
+        qa("What are worms?","Viruses that spread automatically around networks","They do not need human intervention.")
+      ]}
+    ]
+  },
+  rs: {
+    name:"R.S.", icon:"🕯️", color:"var(--rs)", note:"Christianity, Islam, faith, trust and key beliefs.",
+    cycles:[
+      { id:"rs-c1", name:"Cycle 1", topic:"What Does It Mean to Have Trust in God?", questions:[
+        qa("What is worldview?","The way we view and make sense of the world around us","Influenced by culture, family and experience."),
+        qa("What is an Abrahamic religion?","A religion that shares elements with Judaism, Christianity and Islam","They believe in one God."),
+        qa("Who was Abraham?","A man willing to sacrifice his son Isaac and rewarded by God for loyalty","A key figure in Abrahamic faiths."),
+        qa("What is covenant?","An agreement or promise God makes with humans","A sacred promise."),
+        qa("Who was Moses?","An Israelite raised as an Egyptian who was called by God to free his people","He led Israelites from slavery."),
+        qa("What is the Ten Commandments?","Religious rules believed to be given by God to Moses","Humans should obey them."),
+        qa("What is incarnation?","The idea of God becoming flesh as Jesus","A Christian belief."),
+        qa("What is prophecy?","A prediction or estimation about the future","Jesus' birth was foretold in a prophecy."),
+        qa("What is Messiah?","The saviour chosen to bring salvation to humankind","A title given to Jesus in Christianity."),
+        qa("What does divine mean?","Connected with God or God-like features","Religious term."),
+        qa("What was the Last Supper?","The meal Jesus shared with his disciples before he was killed","He told them to drink wine and eat bread to remember him."),
+        qa("What is Good Friday?","The day Jesus was crucified","He called out asking why he had been forsaken."),
+        qa("What is crucifixion?","An ancient form of execution where a person is nailed or bound to a cross","Used in Roman times."),
+        qa("What is salvation?","Christians believe Jesus died to save people from sin and grant eternal life","Being saved."),
+        qa("What is a prophet?","A messenger of God","Muhammad is a prophet in Islam."),
+        qa("What is the Qur'an?","The holy book for Muslims revealed to Prophet Muhammad","It is believed to communicate divine truth."),
+        qa("What is submission in Islam?","Recognising God's power and authority and putting trust in God and his plan","It is a key Islamic idea."),
+        qa("What is faith?","Complete trust or confidence","Belief in truth or ability of something.")
+      ]}
+    ]
+  }
+};
+
+function qa(q,a,hint){ return { q, a, hint: hint || "Use the key words from the revision photos." }; }
+
+const state = {
+  questions:[], index:0, correct:0, wrong:0, wrongItems:[],
+  showHint:false, shuffle:false, strict:false, answered:false,
+  currentSubj:null, currentCycle:null, fromSubject:null
+};
+
+function subjectCount(data){
+  return data.cycles.reduce((sum,c)=>sum+c.questions.length,0);
+}
+
+function initHub(){
+  const grid = document.getElementById("subjects-grid");
+  grid.innerHTML = "";
+  Object.entries(SUBJECTS).forEach(([id,data]) => {
+    const card = document.createElement("div");
+    card.className = "subject-card";
+    card.style.setProperty("--accent", data.color);
+    card.onclick = () => openSubject(id);
+    card.innerHTML = `<span class="subj-icon">${data.icon}</span>
+      <div class="subj-name">${data.name}</div>
+      <div class="subj-count">${data.cycles.length} cycle${data.cycles.length>1?"s":""} · ${subjectCount(data)} questions</div>
+      <div class="tiny-row">Q3 photo pack content</div>`;
+    grid.appendChild(card);
+  });
+  const mega = document.createElement("div");
+  mega.className = "subject-card mega-card";
+  mega.onclick = startMega;
+  mega.innerHTML = `<span class="subj-icon">⚡</span>
+    <div class="subj-name">Mega Quiz - Everything</div>
+    <div class="subj-count">All Q3 subjects combined · ${allQuestions().length} questions</div>`;
+  grid.appendChild(mega);
+}
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function goHub(){ show("hub"); }
+
+function openSubject(subj){
+  const data = SUBJECTS[subj];
+  state.currentSubj = subj;
+  state.fromSubject = subj;
+  document.getElementById("cycles").style.setProperty("--accent", data.color);
+  document.getElementById("cycles-eyebrow").textContent = `${data.icon} ${data.name}`;
+  document.getElementById("cycles-eyebrow").style.color = data.color;
+  document.getElementById("cycles-title").textContent = "Choose a Cycle";
+  document.getElementById("cycles-sub").textContent = data.note;
+  const list = document.getElementById("cycles-list");
+  list.innerHTML = "";
+  list.appendChild(cycleCard(`All ${data.name}`, `Everything in this subject · ${subjectCount(data)} questions`, () => startAllCycles(subj), data.color, "⚡"));
+  data.cycles.forEach(c => list.appendChild(cycleCard(c.name, `${c.topic} · ${c.questions.length} questions`, () => startCycle(c.questions, c.id), data.color, "→")));
+  show("cycles");
+}
+
+function cycleCard(name, topic, handler, color, arrow){
+  const card = document.createElement("div");
+  card.className = "cycle-card";
+  card.style.setProperty("--accent", color);
+  card.innerHTML = `<div class="cycle-info"><div class="cycle-name" style="color:${color}">${name}</div><div class="cycle-topic">${topic}</div></div><div class="cycle-arrow">${arrow}</div>`;
+  card.onclick = handler;
+  return card;
+}
+
+function openStudy(){
+  const grid = document.getElementById("study-grid");
+  grid.innerHTML = "";
+  Object.values(SUBJECTS).forEach(data => {
+    const div = document.createElement("div");
+    div.className = "study-card";
+    div.innerHTML = `<h3 style="color:${data.color}">${data.icon} ${data.name}</h3><p>${data.note}</p><p>${data.cycles.map(c=>c.name + ": " + c.topic).join(" · ")}</p>`;
+    grid.appendChild(div);
+  });
+  show("study");
+}
+
+function allQuestions(){
+  const all = [];
+  Object.values(SUBJECTS).forEach(data => data.cycles.forEach(c => c.questions.forEach(q => all.push({...q, subject:data.name, cycle:c.name}))));
+  return all;
+}
+function startAllCycles(subj){
+  const data = SUBJECTS[subj];
+  const qs = data.cycles.flatMap(c => c.questions.map(q => ({...q, cycle:c.name})));
+  startCycle(qs, subj + "-all");
+}
+function startMega(){
+  state.fromSubject = null;
+  state.currentSubj = "mega";
+  startCycle(allQuestions(), "mega");
+}
+function startCycle(questions,id){
+  state.currentCycle = id;
+  let qs = [...questions];
+  if(state.shuffle) qs = shuffle(qs);
+  state.questions = qs;
+  state.index = 0; state.correct = 0; state.wrong = 0; state.wrongItems = [];
+  document.getElementById("score-c").textContent = "0";
+  document.getElementById("score-w").textContent = "0";
+  show("quiz");
+  loadQuestion();
+}
+function shuffle(arr){
+  return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+}
+function goBack(){
+  if(state.fromSubject) openSubject(state.fromSubject);
+  else goHub();
+}
+function loadQuestion(){
+  const q = state.questions[state.index];
+  state.answered = false;
+  const total = state.questions.length;
+  const pct = (state.index / total) * 100;
+  document.getElementById("progress-bar").style.width = pct + "%";
+  document.getElementById("q-label").textContent = `Question ${state.index+1} of ${total}${q.subject ? " · " + q.subject : ""}${q.cycle ? " · " + q.cycle : ""}`;
+  document.getElementById("q-text").textContent = q.q;
+  document.getElementById("q-hint").textContent = "Hint: " + q.hint;
+  document.getElementById("q-hint").classList.toggle("show", state.showHint);
+  const input = document.getElementById("answer-input");
+  input.value = "";
+  input.className = "answer-input";
+  input.disabled = false;
+  setTimeout(()=>input.focus(),50);
+  const fb = document.getElementById("feedback-box");
+  fb.className = "feedback-box";
+  fb.textContent = "";
+  document.getElementById("main-btn").textContent = "Check Answer";
+}
+function toggleHint(){
+  state.showHint = !state.showHint;
+  document.getElementById("hint-toggle").classList.toggle("on", state.showHint);
+  document.getElementById("q-hint").classList.toggle("show", state.showHint);
+}
+function toggleShuffle(){
+  state.shuffle = !state.shuffle;
+  document.getElementById("shuffle-toggle").classList.toggle("on", state.shuffle);
+}
+function toggleStrict(){
+  state.strict = !state.strict;
+  document.getElementById("strict-toggle").classList.toggle("on", state.strict);
+}
+function normalise(s){
+  return (s || "").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g," ")
+    .trim();
+}
+function answerOk(user, correct){
+  const u = normalise(user), c = normalise(correct);
+  if(!u) return false;
+  if(state.strict) return u === c;
+  if(u === c) return true;
+  if(c.includes(u) && u.length > 3) return true;
+  const uWords = new Set(u.split(" ").filter(w=>w.length>2));
+  const cWords = c.split(" ").filter(w=>w.length>2);
+  const hits = cWords.filter(w=>uWords.has(w)).length;
+  return cWords.length > 2 && hits >= Math.min(3, Math.ceil(cWords.length * .45));
+}
+function checkAnswer(){
+  if(state.answered){ nextQuestion(); return; }
+  const input = document.getElementById("answer-input");
+  const q = state.questions[state.index];
+  const fb = document.getElementById("feedback-box");
+  if(!input.value.trim()) return;
+  state.answered = true;
+  input.disabled = true;
+  if(answerOk(input.value, q.a)){
+    state.correct++;
+    document.getElementById("score-c").textContent = state.correct;
+    input.className = "answer-input correct-input";
+    fb.className = "feedback-box correct-fb show";
+    fb.textContent = "Correct.";
+  } else {
+    state.wrong++;
+    document.getElementById("score-w").textContent = state.wrong;
+    input.className = "answer-input wrong-input";
+    fb.className = "feedback-box wrong-fb show";
+    fb.textContent = "The answer was: " + q.a;
+    state.wrongItems.push(q);
+  }
+  document.getElementById("main-btn").textContent = state.index < state.questions.length - 1 ? "Next Question →" : "See Results";
+}
+function handleBtn(){
+  if(state.answered) nextQuestion();
+  else checkAnswer();
+}
+function nextQuestion(){
+  state.index++;
+  if(state.index >= state.questions.length) showResults();
+  else loadQuestion();
+}
+function showResults(){
+  const total = state.questions.length;
+  const pct = Math.round((state.correct / total) * 100);
+  let emoji = "😅", title = "Keep Going";
+  if(pct >= 90){ emoji = "🏆"; title = "Outstanding"; }
+  else if(pct >= 70){ emoji = "🎉"; title = "Great Work"; }
+  else if(pct >= 50){ emoji = "👍"; title = "Solid Start"; }
+  document.getElementById("results-emoji").textContent = emoji;
+  document.getElementById("results-title").textContent = title;
+  document.getElementById("results-score").innerHTML = `You got <span>${state.correct}/${total}</span> correct - ${pct}%`;
+  const wl = document.getElementById("wrong-list");
+  if(state.wrongItems.length === 0){
+    wl.innerHTML = '<h3 style="color:var(--correct)">Perfect score.</h3>';
+  } else {
+    wl.innerHTML = `<h3>Review These (${state.wrongItems.length})</h3>` + state.wrongItems.map(item => `<div class="wrong-item"><div class="wq">${item.q}</div><div class="wa">→ ${item.a}</div></div>`).join("");
+  }
+  show("results");
+}
+function retryQuiz(){
+  startCycle(state.questions, state.currentCycle);
+}
+document.addEventListener("keypress", e => {
+  if(e.key === "?") toggleHint();
+});
+initHub();
+</script>
+
+
+</body><div id="codex-browser-sidebar-comments-root" style="position: fixed; inset: 0px; pointer-events: none; z-index: 2147483000;"></div></html>
