@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviseHub — Your Smart Study Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060a14;
+  --surface: #0d1526;
+  --surface2: #111d35;
+  --blue: #1a6cff;
+  --gold: #c9a84c;
+  --text: #e8eef8;
+  --muted: #7a90b8;
+  --border: #1e2f50;
+  --green: #22c55e;
+  --red: #ef4444;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid texture background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(26,108,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,108,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(26,108,255,0.06) 0%, transparent 70%);
+  top: -100px; left: 50%;
+  transform: translateX(-50%);
+  animation: drift 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes drift {
+  from { transform: translateX(-60%) translateY(0); }
+  to { transform: translateX(-40%) translateY(60px); }
+}
+
+/* ===== SCREENS ===== */
+.screen {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(20px);
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+/* ===== LANDING ===== */
+#landing {
+  padding: 40px 20px 100px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.site-header {
+  text-align: center;
+  padding: 60px 0 50px;
+  cursor: default;
+}
+
+.site-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff 30%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.site-subtitle {
+  color: var(--muted);
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 400;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  padding-left: 4px;
+}
+
+/* Settings bar */
+.settings-bar {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.toggle-wrap:hover { border-color: var(--blue); }
+.toggle-wrap .label { font-size: 0.875rem; color: var(--muted); }
+
+.toggle {
+  width: 36px; height: 20px;
+  background: var(--border);
+  border-radius: 100px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle::after {
+  content: '';
+  width: 14px; height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle.on { background: var(--blue); }
+.toggle.on::after { transform: translateX(16px); }
+
+/* Subject cards grid */
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.subject-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.subject-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent, var(--blue));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.subject-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px var(--blue);
+  border-color: var(--blue);
+}
+
+.subject-card:hover::before { transform: scaleX(1); }
+
+.card-icon { font-size: 2rem; margin-bottom: 14px; }
+.card-subject { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+.card-meta { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+.card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+.mega-card {
+  background: linear-gradient(135deg, #0d1a38, #0f2045);
+  border: 1px solid var(--blue);
+  border-radius: var(--radius);
+  padding: 28px;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.mega-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(26,108,255,0.25);
+}
+
+.mega-card .card-icon { font-size: 2.5rem; margin-bottom: 0; }
+.mega-card .card-subject { font-size: 1.5rem; }
+
+/* Tips bar */
+.tips-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: background 0.2s;
+}
+.tips-bar:hover { background: var(--surface2); }
+.tips-bar span { color: var(--blue); }
+
+/* ===== SUBJECT PAGE ===== */
+#subject-page {
+  padding: 40px 20px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+  padding-top: 20px;
+}
+
+.back-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.back-btn:hover { border-color: var(--blue); color: var(--text); transform: translateX(-3px); }
+
+.page-title-wrap { flex: 1; }
+.page-icon { font-size: 2rem; margin-bottom: 4px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; }
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.topic-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.topic-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  border-color: var(--blue);
+}
+
+.topic-num { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.topic-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+.topic-stats { display: flex; gap: 12px; }
+.topic-stat { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+
+/* ===== QUIZ SCREEN ===== */
+#quiz-screen {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.quiz-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.quiz-subject-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  flex: 1;
+}
+
+.quiz-counter {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Streak badge */
+.streak-badge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ff6b1a, #ffd700);
+  color: #000;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.streak-badge.visible { display: flex; }
+
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Progress bar */
+.progress-wrap {
+  height: 4px;
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--blue);
+  box-shadow: 0 0 12px var(--blue);
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+/* Score strip */
+.score-strip {
+  display: flex;
+  gap: 10px;
+  padding: 10px 24px;
+  flex-shrink: 0;
+}
+
+.score-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.score-pill.correct { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+.score-pill.wrong { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+/* Quiz body */
+.quiz-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Timer bar */
+.timer-bar-wrap {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin: 0 24px;
+}
+
+.timer-bar {
+  height: 100%;
+  background: var(--blue);
+  transition: width linear, background 0.3s;
+  width: 100%;
+}
+
+.timer-bar.warning { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+.timer-bar.danger { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+/* Question card */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.q-type-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+}
+
+.question-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* Options */
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  transition: all 0.2s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+}
+
+.option-btn:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: var(--surface2);
+  transform: translateX(4px);
+}
+
+.option-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--blue);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.option-btn.correct {
+  border-color: var(--green);
+  background: rgba(34,197,94,0.1);
+  color: var(--text);
+}
+.option-btn.correct .option-label { color: var(--green); border-color: var(--green); }
+.option-btn.wrong {
+  border-color: var(--red);
+  background: rgba(239,68,68,0.1);
+  color: var(--text);
+}
+.option-btn.wrong .option-label { color: var(--red); border-color: var(--red); }
+
+/* Feedback box */
+.feedback-box {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: none;
+}
+
+.feedback-box.show { display: block; animation: fadeIn 0.3s ease; }
+.feedback-box.correct-fb { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
+.feedback-box.wrong-fb { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+.feedback-box.skip-fb { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.next-btn {
+  background: var(--blue);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: none;
+  align-self: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,108,255,0.4); }
+.next-btn.visible { display: flex; }
+
+/* ===== RESULTS ===== */
+#results-screen {
+  padding: 40px 20px 80px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.results-header { text-align: center; padding: 40px 0 30px; }
+.results-emoji { font-size: 4rem; margin-bottom: 16px; animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+@keyframes bounceIn {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.results-title { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 900; margin-bottom: 8px; }
+.results-score { font-family: 'DM Mono', monospace; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 500; color: var(--blue); margin: 16px 0; }
+.results-feedback { color: var(--muted); font-size: 1rem; line-height: 1.7; max-width: 540px; margin: 0 auto 32px; }
+
+.focus-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.focus-title { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--red); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+
+.focus-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.focus-item:last-child { border-bottom: none; padding-bottom: 0; }
+.focus-q { font-size: 0.85rem; color: var(--muted); }
+.focus-a { font-size: 0.85rem; color: var(--green); font-weight: 500; }
+
+.results-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,108,255,0.4); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover { border-color: var(--blue); transform: translateY(-2px); }
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 60px;
+  right: 20px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.toast {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 0.875rem;
+  max-width: 320px;
+  animation: toastIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Konami overlay */
+.konami-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6,10,20,0.95);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.konami-overlay.show { display: flex; }
+.konami-overlay h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 16px; }
+.konami-overlay p { color: var(--muted); margin-bottom: 28px; }
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+  z-index: 9998;
+  pointer-events: none;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Easter egg: typing "revision" */
+#typed-buffer { position: fixed; opacity: 0; pointer-events: none; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .quiz-body { padding: 16px; }
+  .question-card { padding: 20px; }
+  .settings-bar { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div id="typed-buffer"></div>
+
+<!-- LANDING -->
+<div class="screen active" id="landing">
+  <div>
+    <div class="site-header">
+      <div class="site-title" id="site-title">ReviseHub</div>
+      <div class="site-subtitle">🎯 Your complete Year 7 & 8 revision companion — smarter study, better results</div>
+    </div>
+
+    <div style="max-width:1200px;margin:0 auto;padding:0 20px">
+      <div class="section-label">⚙ Settings</div>
+      <div class="settings-bar">
+        <div class="toggle-wrap" id="toggle-shuffle" onclick="toggleSetting('shuffle')">
+          <div class="toggle on" id="tog-shuffle"></div>
+          <span class="label">Shuffle Questions</span>
+        </div>
+        <div class="toggle-wrap" id="toggle-hints" onclick="toggleSetting('hints')">
+          <div class="toggle on" id="tog-hints"></div>
+          <span class="label">Show Hints</span>
+        </div>
+      </div>
+
+      <div class="section-label">📚 Choose Your Subject</div>
+      <div class="subjects-grid" id="subjects-grid"></div>
+
+      <div style="margin-top:16px">
+        <div class="section-label">⚡ Mega Quiz</div>
+        <div class="mega-card" onclick="startMegaQuiz()">
+          <div class="card-icon">⚡</div>
+          <div>
+            <div class="card-subject">All Subjects Mega Quiz</div>
+            <div class="card-meta">All Topics Combined</div>
+            <div class="card-desc">Test yourself across every subject and topic in one epic quiz session.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBJECT PAGE -->
+<div class="screen" id="subject-page">
+  <div>
+    <div class="page-header">
+      <button class="back-btn" onclick="showLanding()">← Back</button>
+      <div class="page-title-wrap">
+        <div class="page-icon" id="sp-icon"></div>
+        <div class="page-title" id="sp-title"></div>
+      </div>
+    </div>
+    <div class="section-label">📋 Topics</div>
+    <div class="topics-grid" id="topics-grid"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="quiz-screen">
+  <div class="quiz-topbar">
+    <button class="back-btn" onclick="quitQuiz()" style="flex-shrink:0">← Quit</button>
+    <span class="quiz-subject-label" id="q-subject-label"></span>
+    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">3</span> streak!</div>
+    <span class="quiz-counter" id="q-counter">1 / 10</span>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="q-progress"></div></div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+  <div class="score-strip">
+    <div class="score-pill correct">✓ <span id="q-correct">0</span></div>
+    <div class="score-pill wrong">✗ <span id="q-wrong">0</span></div>
+  </div>
+  <div class="quiz-body">
+    <div class="question-card" id="question-card">
+      <div class="q-type-label" id="q-type"></div>
+      <div class="question-text" id="q-text"></div>
+    </div>
+    <div class="options-grid" id="options-grid"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next → </button>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="results-screen">
+  <div>
+    <div class="results-header">
+      <div class="results-emoji" id="r-emoji">🎉</div>
+      <div class="results-title" id="r-title">Excellent Work!</div>
+      <div class="results-score" id="r-score">10/10 · 100%</div>
+      <div class="results-feedback" id="r-feedback"></div>
+    </div>
+    <div class="focus-panel" id="focus-panel" style="display:none">
+      <div class="focus-title">📌 Focus On These</div>
+      <div id="focus-list"></div>
+    </div>
+    <div class="results-btns">
+      <button class="btn-primary" id="retry-btn" onclick="retryQuiz()">↺ Retry</button>
+      <button class="btn-secondary" id="back-subject-btn" onclick="backToSubject()">← Back to Subject</button>
+      <button class="btn-secondary" onclick="showLanding()">⌂ All Subjects</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Konami overlay -->
+<div class="konami-overlay" id="konami-overlay" onclick="closeKonami()">
+  <div>
+    <div style="font-size:4rem;margin-bottom:16px">🕹️</div>
+    <h2>SECRET UNLOCKED</h2>
+    <p>You found the cheat code. Too bad there are no shortcuts in learning! 😄<br><br><span style="color:var(--muted);font-size:0.85rem">Click anywhere to close</span></p>
+  </div>
+</div>
+
+<!-- Tips bar -->
+<div class="tips-bar" id="tips-bar" onclick="showTipSecret()">
+  💡 <span>Study tip:</span> Active recall beats passive reading — quiz yourself daily for best results. Click for a secret hint.
+</div>
+
+<script>
+// ===== DATA =====
+const SUBJECTS = [
+  {
+    id: 'art', name: 'Art', icon: '🎨',
+    accent: '#e879f9',
+    desc: 'Elements of art: tone, line, colour, composition, form, shape, proportion, texture',
+    topics: [
+      {
+        name: 'Elements of Art — Cycle 1–4',
+        qCount: 8, time: '~6 min',
+        qs: [
+          {type:'Definition',text:'What is "tone" in art?',correct:'The lightness or darkness of an object, shown using shading',opts:['The lightness or darkness of an object, shown using shading','The texture and surface quality of a material','The way elements are arranged in a composition','The overall shape taken by a work of art'],timer:15},
+          {type:'Definition',text:'What is "line" in art?',correct:'A mark made on a surface that joins different points',opts:['A mark made on a surface that joins different points','The lightness or darkness of an object','The size of one shape compared to another','A flat area surrounded by edges or an outline'],timer:15},
+          {type:'Definition',text:'What is "composition" in art?',correct:'The way in which elements are put together to produce a final piece',opts:['The way in which elements are put together to produce a final piece','The amount of pressure used with a pencil or biro','The direction and shape of lines in a work','The surface quality or feel of a material'],timer:15},
+          {type:'Definition',text:'What is "texture" in art?',correct:'The surface quality in a work of art — how things look or feel',opts:['The surface quality in a work of art — how things look or feel','The lightness or darkness achieved with shading','The precise, regular geometric shapes in a work','The proportion of one element compared to another'],timer:15},
+          {type:'Definition',text:'What is "proportion" in art?',correct:'The size of an object or shape compared with another',opts:['The size of an object or shape compared with another','The direction and length of a mark on a surface','The way elements are arranged in a composition','The colour created by mixing primary colours'],timer:15},
+          {type:'Recall',text:'What are primary colours?',correct:'Red, blue and yellow',opts:['Red, blue and yellow','Red, green and blue','Purple, green and orange','Yellow, cyan and magenta'],timer:8},
+          {type:'Recall',text:'What colours are created when primary colours are mixed?',correct:'Secondary colours: purple, green and orange',opts:['Secondary colours: purple, green and orange','Tertiary colours: brown, teal and maroon','Complementary colours: cyan, magenta and yellow','Neutral colours: grey, white and black'],timer:15},
+          {type:'Definition',text:'What is "shape" in art?',correct:'A flat area surrounded by edges or an outline',opts:['A flat area surrounded by edges or an outline','A three-dimensional object with length, width and depth','The surface quality and feel of a material','The lightness or darkness achieved with shading'],timer:15}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'english', name: 'English', icon: '📖',
+    accent: '#fb923c',
+    desc: 'Language techniques, word classes, literary devices, tragic hero, Shakespeare',
+    topics: [
+      {
+        name: 'Craft Texts — Cycle 1',
+        qCount: 12, time: '~9 min',
+        qs: [
+          {type:'Definition',text:'What is a simile?',correct:'Comparing two things using "as" or "like"',opts:['Comparing two things using "as" or "like"','A direct comparison without using as or like','Giving human characteristics to non-living things','Repeating a word or phrase for effect'],timer:8},
+          {type:'Definition',text:'What is a metaphor?',correct:'A direct comparison of two things without using as or like',opts:['A direct comparison of two things without using as or like','Comparing two things using "as" or "like"','Extreme exaggeration for effect','A group of words linking to one topic'],timer:8},
+          {type:'Definition',text:'What is personification?',correct:'Human characteristics given to non-living things or objects',opts:['Human characteristics given to non-living things or objects','Quoting an icon or famous person','An unanswered question that provokes thought','A short description of a personal event'],timer:15},
+          {type:'Definition',text:'What is pathetic fallacy?',correct:'Weather that establishes or creates mood and tone',opts:['Weather that establishes or creates mood and tone','Language that evokes an emotional response','Extreme exaggeration for effect','A narrative with a hidden meaning'],timer:15},
+          {type:'Definition',text:'What is a "triplet" in language?',correct:'A set of three adjectives, verbs, adverbs or phrases in a row',opts:['A set of three adjectives, verbs, adverbs or phrases in a row','Four or more words or phrases in a row','Repeating a word or phrase throughout a text','A reference to a well-known event or person'],timer:15},
+          {type:'Definition',text:'What is a semantic field?',correct:'A group of words linking to one topic',opts:['A group of words linking to one topic','Numerical data used to persuade a reader','An unanswered question that provokes thought','Language that evokes an emotional response'],timer:15},
+          {type:'Definition',text:'What is "ethos" in non-fiction writing?',correct:'Appealing to community values, morals or ethics',opts:['Appealing to community values, morals or ethics','Appealing to an audience\'s emotions','Appealing to logic and reasoning','Quoting a famous or influential person'],timer:15},
+          {type:'Definition',text:'What is "pathos" in non-fiction writing?',correct:'Appealing to an audience\'s emotions',opts:['Appealing to an audience\'s emotions','Appealing to community values and ethics','Appealing to logic and reasoning','Using numerical data to persuade'],timer:8},
+          {type:'Definition',text:'What is "logos" in non-fiction writing?',correct:'Appealing to logic and reasoning',opts:['Appealing to logic and reasoning','Appealing to community values and ethics','Appealing to an audience\'s emotions','Using a short personal anecdote'],timer:8},
+          {type:'Word Class',text:'What is an adjective?',correct:'A word that describes a noun',opts:['A word that describes a noun','An action word (can put TO in front of it)','A word that represents a person, place or object','A word that describes a verb'],timer:8},
+          {type:'Word Class',text:'What is an adverb?',correct:'A word that describes a verb, usually ending in -ly',opts:['A word that describes a verb, usually ending in -ly','A word that describes a noun','Words that replace nouns for a person or group','A word that represents a person, place or object'],timer:8},
+          {type:'Definition',text:'What is hyperbole?',correct:'Extreme exaggeration',opts:['Extreme exaggeration','An unanswered question that provokes thought','A narrative with a hidden meaning','A reoccurring symbol or image'],timer:8}
+        ]
+      },
+      {
+        name: 'History of English — Cycle 2',
+        qCount: 10, time: '~8 min',
+        qs: [
+          {type:'Definition',text:'What is symbolism in literature?',correct:'An image which represents a hidden deeper meaning',opts:['An image which represents a hidden deeper meaning','A narrative with a hidden moral or political meaning','A hint at a later event in the text','A reoccurring symbol or image throughout a text'],timer:15},
+          {type:'Definition',text:'What is a motif?',correct:'A reoccurring symbol or image',opts:['A reoccurring symbol or image','A reference to a well-known event, person or myth','Two different contrasting ideas or images','A hint at a later event in the text'],timer:8},
+          {type:'Definition',text:'What is an allegory?',correct:'A narrative with a hidden meaning, often moral, political or religious',opts:['A narrative with a hidden meaning, often moral, political or religious','A hint at a later event in the text','A direct comparison of two things without as or like','An image which represents a hidden deeper meaning'],timer:15},
+          {type:'Definition',text:'What is allusion?',correct:'A reference to an event, person or myth that is well known',opts:['A reference to an event, person or myth that is well known','A narrative with a hidden moral meaning','An image which represents a hidden deeper meaning','A reoccurring symbol or image'],timer:15},
+          {type:'Definition',text:'What is foreshadowing?',correct:'A hint at a later event',opts:['A hint at a later event','A reoccurring symbol or image','Two different contrasting ideas or images','A reference to a well-known person or event'],timer:8},
+          {type:'Tragic Hero',text:'What is "hamartia"?',correct:'The tragic flaw of a character that leads to their downfall',opts:['The tragic flaw of a character that leads to their downfall','The delayed recognition of mistakes by the hero','A sudden reversal of fortune or circumstance','High social status of the tragic hero'],timer:15},
+          {type:'Tragic Hero',text:'What is "anagnorisis"?',correct:'Delayed recognition of mistakes by the tragic hero',opts:['Delayed recognition of mistakes by the tragic hero','The tragic flaw that leads to downfall','A sudden reversal of fortune or circumstance','The death of the tragic hero'],timer:15},
+          {type:'Tragic Hero',text:'What is "peripeteia"?',correct:'A sudden reversal of fortune or circumstance',opts:['A sudden reversal of fortune or circumstance','Delayed recognition of mistakes','The tragic flaw that leads to downfall','High status of the main character'],timer:15},
+          {type:'Definition',text:'What is animal imagery?',correct:'Giving non-animal objects animal characteristics',opts:['Giving non-animal objects animal characteristics','An image which represents a hidden deeper meaning','A narrative with a hidden moral meaning','A hint at a later event in the text'],timer:15},
+          {type:'Definition',text:'What is a tragedy (as a genre)?',correct:'A genre of drama based on human suffering and downfall',opts:['A genre of drama based on human suffering and downfall','A genre based on fate, reunion and mistaken identity','A genre based on historical events and social commentary','A narrative with a hidden moral or political meaning'],timer:15}
+        ]
+      },
+      {
+        name: 'Shakespeare — Cycle 3',
+        qCount: 8, time: '~6 min',
+        qs: [
+          {type:'Definition',text:'What is "The Divine Right of Kings"?',correct:'The belief that a King\'s authority comes from God',opts:['The belief that a King\'s authority comes from God','The idea that the state is above all individuals','The natural hierarchy of God, State, Man, Woman, Nature','The killing of a monarch, regarded as a mortal sin'],timer:15},
+          {type:'Definition',text:'What is regicide?',correct:'The killing of a monarch, regarded as a mortal sin',opts:['The killing of a monarch, regarded as a mortal sin','The belief that a King\'s authority comes from God','A society controlled and dominated by men','A typical example of a character, setting or story pattern'],timer:8},
+          {type:'Definition',text:'What is "The Natural Order" in Shakespeare\'s context?',correct:'The hierarchy: God – State – Man – Woman – Nature',opts:['The hierarchy: God – State – Man – Woman – Nature','The belief that a King\'s authority comes from God','A society controlled and dominated by men','The killing of a monarch as a mortal sin'],timer:15},
+          {type:'Definition',text:'What is a patriarchal society?',correct:'A society that is controlled or dominated by men',opts:['A society that is controlled or dominated by men','A society based on the divine right of kings','A hierarchy placing God above all others','A society with a natural order of man over nature'],timer:15},
+          {type:'Shakespeare Genre',text:'What is a Shakespearean comedy based on?',correct:'Fate, supernatural elements, reunion and mistaken identity',opts:['Fate, supernatural elements, reunion and mistaken identity','Human suffering and downfall','Historical events and social commentary','A tragic hero with a fatal flaw'],timer:15},
+          {type:'Shakespeare Genre',text:'What is a Shakespearean history play based on?',correct:'Historical events (dramatized), social strata and social commentary',opts:['Historical events (dramatized), social strata and social commentary','Human suffering and the downfall of a tragic hero','Fate, supernatural elements and mistaken identity','A narrative with a hidden moral or religious meaning'],timer:15},
+          {type:'Definition',text:'What is an "archetype" in literature?',correct:'A typical example of a type of character, setting or story pattern',opts:['A typical example of a type of character, setting or story pattern','A reoccurring symbol or image throughout a text','A reference to a well-known event or person','A narrative with a hidden moral or political meaning'],timer:15},
+          {type:'Definition',text:'What does "structure" refer to in literary analysis?',correct:'The way a text is organised, e.g. soliloquys and dialogue',opts:['The way a text is organised, e.g. soliloquys and dialogue','The words and images used, e.g. metaphor or simile','The type or genre of a text, e.g. tragedy or comedy','A main idea running through a text'],timer:15}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'maths', name: 'Maths', icon: '📐',
+    accent: '#34d399',
+    desc: 'Number operations, indices, BIDMAS, fractions, percentages, ratios',
+    topics: [
+      {
+        name: 'Calculate Efficiently — Cycle 1',
+        qCount: 10, time: '~7 min',
+        qs: [
+          {type:'Definition',text:'What is an integer?',correct:'A whole number, including negatives and zero',opts:['A whole number, including negatives and zero','Any number with a decimal point','A number that can only be divided by 1 and itself','The result when numbers are multiplied together'],timer:8},
+          {type:'Recall',text:'What does the symbol ">" mean?',correct:'Greater than',opts:['Greater than','Less than','Equal to','Approximately equal to'],timer:8},
+          {type:'Recall',text:'What is the "product" of two numbers?',correct:'The result when numbers are multiplied together',opts:['The result when numbers are multiplied together','The result when one number is subtracted from another','The distance around the outside of a shape','The amount of space inside a 2D shape'],timer:8},
+          {type:'Recall',text:'What is the "difference" between two numbers?',correct:'The result when one number is subtracted from another',opts:['The result when one number is subtracted from another','The result when two numbers are multiplied together','The sum of two numbers added together','The value of a digit depending on its place'],timer:8},
+          {type:'Definition',text:'What are odd numbers?',correct:'Integers that are not multiples of 2, ending in 1, 3, 5, 7 or 9',opts:['Integers that are not multiples of 2, ending in 1, 3, 5, 7 or 9','Integers that are multiples of 2','Numbers with exactly two factors: 1 and itself','Numbers that appear in another number\'s times table'],timer:15},
+          {type:'Definition',text:'What is the perimeter of a shape?',correct:'The distance around the outside of the shape',opts:['The distance around the outside of the shape','The amount of space inside a 2D shape (measured in squares)','The height and shape of the land','The result when numbers are multiplied together'],timer:8},
+          {type:'Definition',text:'What is "area" in maths?',correct:'The amount of space inside a 2D shape, measured in squares',opts:['The amount of space inside a 2D shape, measured in squares','The distance around the outside of a shape','The result when one number is subtracted from another','The value of a digit depending on its place'],timer:8},
+          {type:'Rules',text:'What is the rule for double minus signs (– –)?',correct:'Two negative signs make a positive (+)',opts:['Two negative signs make a positive (+)','Two negative signs make a negative (–)','A positive and negative make a positive','Two negatives cancel each other out to zero'],timer:8},
+          {type:'Definition',text:'When counting significant figures, where do you start counting?',correct:'From the first non-zero digit',opts:['From the first non-zero digit','From the leftmost digit including zeros','From the decimal point','From the rightmost digit'],timer:8},
+          {type:'Standard Form',text:'What must the number in standard form be?',correct:'Between 1 and 10 (not including 10), multiplied by a power of 10',opts:['Between 1 and 10 (not including 10), multiplied by a power of 10','Any whole number multiplied by a power of 10','Between 0 and 1, multiplied by a power of 10','A number divided by a power of 10'],timer:15}
+        ]
+      },
+      {
+        name: 'Presenting Numbers — Cycle 2',
+        qCount: 10, time: '~7 min',
+        qs: [
+          {type:'Index Law',text:'What is anything to the power of zero equal to?',correct:'1 (one)',opts:['1 (one)','0 (zero)','The base number itself','Undefined'],timer:8},
+          {type:'Index Law',text:'When multiplying powers with the same base, what do you do with the indices?',correct:'Add the powers together',opts:['Add the powers together','Multiply the powers together','Subtract the powers','Divide the powers'],timer:8},
+          {type:'Index Law',text:'When dividing powers with the same base, what do you do with the indices?',correct:'Subtract the powers',opts:['Subtract the powers','Add the powers','Multiply the powers','Divide the powers'],timer:8},
+          {type:'Index Law',text:'When raising a power to a power, what do you do?',correct:'Multiply the powers',opts:['Multiply the powers','Add the powers','Subtract the powers','Divide the powers'],timer:8},
+          {type:'Recall',text:'What is the square root of 64?',correct:'8',opts:['8','6','7','9'],timer:8},
+          {type:'BIDMAS',text:'In BIDMAS, what does the "B" stand for?',correct:'Brackets',opts:['Brackets','Base numbers','BIDMAS','Binomials'],timer:8},
+          {type:'BIDMAS',text:'In BIDMAS, after Brackets and Indices, what comes next?',correct:'Division and Multiplication (equal priority)',opts:['Division and Multiplication (equal priority)','Addition and Subtraction','Division only, then Multiplication','Multiplication only, then Division'],timer:15},
+          {type:'Recall',text:'What is the 10th square number?',correct:'100',opts:['100','81','121','64'],timer:8},
+          {type:'Definition',text:'How do you estimate a calculation?',correct:'Round each value first (usually to 1 significant figure) then calculate',opts:['Round each value first (usually to 1 significant figure) then calculate','Use the exact values but round the final answer','Add all numbers together and divide by 2','Remove all decimal places before calculating'],timer:15},
+          {type:'Recall',text:'What is the result of (–) × (+)?',correct:'Negative (–)',opts:['Negative (–)','Positive (+)','Zero','Undefined'],timer:8}
+        ]
+      },
+      {
+        name: 'Breaking Up Numbers — Cycle 3',
+        qCount: 12, time: '~9 min',
+        qs: [
+          {type:'Definition',text:'What is a prime number?',correct:'An integer with exactly 2 factors: 1 and itself',opts:['An integer with exactly 2 factors: 1 and itself','An integer that is a multiple of 2','An integer that appears in another number\'s times table','An integer with more than 2 factors'],timer:8},
+          {type:'Recall',text:'What are the first five prime numbers?',correct:'2, 3, 5, 7, 11',opts:['2, 3, 5, 7, 11','1, 2, 3, 5, 7','2, 4, 6, 8, 10','3, 5, 7, 9, 11'],timer:8},
+          {type:'Definition',text:'What is the Highest Common Factor (HCF)?',correct:'The largest number that is a factor of each given number',opts:['The largest number that is a factor of each given number','The first number that is a multiple of each given number','A number that divides exactly into another with no remainder','Numbers that appear in another number\'s times table'],timer:15},
+          {type:'Definition',text:'What is the Lowest Common Multiple (LCM)?',correct:'The first number that is a multiple of each given number',opts:['The first number that is a multiple of each given number','The largest number that is a factor of each given number','The smallest factor of a given number','The product of two numbers divided by their HCF'],timer:15},
+          {type:'Definition',text:'What is a "proper fraction"?',correct:'A fraction where the numerator is smaller than the denominator',opts:['A fraction where the numerator is smaller than the denominator','A fraction where the numerator is greater than the denominator','A whole number plus a proper fraction','A fraction equivalent to 1'],timer:15},
+          {type:'Definition',text:'What is an "improper fraction"?',correct:'A fraction where the numerator is greater than the denominator',opts:['A fraction where the numerator is greater than the denominator','A fraction where the numerator is smaller than the denominator','A fraction with equal numerator and denominator','A whole number plus a proper fraction'],timer:15},
+          {type:'Method',text:'When adding fractions, what must you ensure first?',correct:'That the fractions have a common denominator',opts:['That the fractions have a common denominator','That both numerators are equal','That one fraction is proper and one is improper','That both denominators equal 1'],timer:15},
+          {type:'Method',text:'How do you multiply two fractions?',correct:'Multiply the numerators together; multiply the denominators together',opts:['Multiply the numerators together; multiply the denominators together','Add the numerators; keep the denominators the same','Find a common denominator; multiply across','Keep, Change, and Flip the second fraction'],timer:15},
+          {type:'Method',text:'What is the "Keep, Change, Flip" method used for in fractions?',correct:'Dividing fractions',opts:['Dividing fractions','Multiplying fractions','Adding fractions','Simplifying fractions'],timer:8},
+          {type:'Definition',text:'What is a mixed number?',correct:'An integer plus a proper fraction',opts:['An integer plus a proper fraction','A fraction where numerator equals denominator','An improper fraction converted to a simpler form','A fraction with no common factors'],timer:8},
+          {type:'Definition',text:'What is a factor?',correct:'An integer that divides exactly into another integer with no remainder',opts:['An integer that divides exactly into another integer with no remainder','Numbers that appear in another number\'s times table','An integer with exactly 2 factors: 1 and itself','The result when numbers are multiplied together'],timer:8},
+          {type:'Definition',text:'When is a fraction equivalent to 1?',correct:'When the numerator and denominator are equal',opts:['When the numerator and denominator are equal','When the numerator is 1','When the denominator is 0','When the numerator is greater than the denominator'],timer:8}
+        ]
+      },
+      {
+        name: 'Sharing a Whole — Cycle 4',
+        qCount: 10, time: '~7 min',
+        qs: [
+          {type:'Definition',text:'What is a percentage?',correct:'A number expressed as a fraction over 100',opts:['A number expressed as a fraction over 100','A number expressed as a fraction over 10','A number divided by 1000','A number multiplied by 10'],timer:8},
+          {type:'Method',text:'How do you calculate 1% of a number?',correct:'Divide by 100',opts:['Divide by 100','Divide by 10','Multiply by 100','Divide by 1000'],timer:8},
+          {type:'Method',text:'How do you calculate 25% of a number?',correct:'Divide by 4',opts:['Divide by 4','Divide by 2','Divide by 100, then multiply by 25','Multiply by 0.4'],timer:8},
+          {type:'Formula',text:'What is the formula for percentage change?',correct:'(New value – Original value) ÷ Original value × 100',opts:['(New value – Original value) ÷ Original value × 100','(Original value – New value) ÷ New value × 100','New value ÷ Original value × 100','(New value + Original value) ÷ 2 × 100'],timer:25},
+          {type:'Definition',text:'What is interest in mathematics?',correct:'A percentage fee paid when money is borrowed',opts:['A percentage fee paid when money is borrowed','A percentage of the total value of an item','The change in value expressed as a fraction','A ratio comparing two different amounts'],timer:15},
+          {type:'Definition',text:'What does "directly proportional" mean?',correct:'Both quantities increase or decrease at the same rate',opts:['Both quantities increase or decrease at the same rate','One quantity increases while the other decreases at the same rate','The ratio between two quantities changes over time','Both quantities remain fixed regardless of changes'],timer:15},
+          {type:'Definition',text:'What does "inversely proportional" mean?',correct:'One quantity increases while the other decreases at the same rate',opts:['One quantity increases while the other decreases at the same rate','Both quantities increase or decrease at the same rate','Both quantities remain fixed regardless of changes','The ratio between two quantities doubles over time'],timer:15},
+          {type:'Recall',text:'How many grams are in 1 kilogram?',correct:'1000g',opts:['1000g','100g','10000g','500g'],timer:8},
+          {type:'Recall',text:'How many centimetres are in 1 metre?',correct:'100cm',opts:['100cm','10cm','1000cm','50cm'],timer:8},
+          {type:'Definition',text:'What is a ratio?',correct:'How much of one thing there is compared to another using equal parts',opts:['How much of one thing there is compared to another using equal parts','A number expressed as a fraction over 100','A percentage fee paid when money is borrowed','A direct comparison without using as or like'],timer:15}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'science', name: 'Science', icon: '🔬',
+    accent: '#60a5fa',
+    desc: 'Hazards, particles, cells, atoms, energy, rocks, light, waves, DNA, circuits',
+    topics: [
+      {
+        name: 'Hazards & Safety',
+        qCount: 8, time: '~6 min',
+        qs: [
+          {type:'Definition',text:'What is a hazard?',correct:'Something that could cause harm, damage, or adverse health effects',opts:['Something that could cause harm, damage, or adverse health effects','A symbol used on containers to indicate danger','A substance that destroys living tissue on contact','A chemical that can catch fire easily'],timer:15},
+          {type:'Hazard Symbol',text:'What does the skull and crossbones hazard symbol indicate?',correct:'Toxic — could cause death if swallowed or inhaled',opts:['Toxic — could cause death if swallowed or inhaled','Corrosive — damages skin and clothing','Flammable — catches fire easily','Explosive — can explode easily'],timer:8},
+          {type:'Hazard Symbol',text:'What does the flame over a circle hazard symbol mean?',correct:'Oxidising — makes flammable substances burn more fiercely',opts:['Oxidising — makes flammable substances burn more fiercely','Flammable — catches fire easily','Explosive — can explode easily','Toxic — could cause death if swallowed'],timer:8},
+          {type:'Hazard Symbol',text:'Which hazard symbol shows a corrosion effect?',correct:'Corrosive — damages skin and clothing',opts:['Corrosive — damages skin and clothing','Moderate health hazard — causes skin irritation','Toxic — could cause death','Harmful to the environment'],timer:8},
+          {type:'Recall',text:'What is an example of a flammable substance?',correct:'Ethanol',opts:['Ethanol','Bromine','Copper sulphate','Ammonium nitrate'],timer:8},
+          {type:'Recall',text:'What is an example of a toxic substance?',correct:'Bromine',opts:['Bromine','Ethanol','Propanone','Lead compounds'],timer:8},
+          {type:'Recall',text:'What do hazard symbols allow, even if a person cannot read the accompanying text?',correct:'They provide a warning about the dangers of the substance',opts:['They provide a warning about the dangers of the substance','They show the exact chemical formula of the substance','They indicate the temperature at which the substance is safe','They show who manufactured the chemical'],timer:15},
+          {type:'Hazard Symbol',text:'What does the dead tree and fish symbol indicate?',correct:'Harmful to the environment — could damage animal and plant life',opts:['Harmful to the environment — could damage animal and plant life','Toxic — could cause death if swallowed','Explosive — can explode easily','Corrosive — damages skin and clothing'],timer:8}
+        ]
+      },
+      {
+        name: 'Particles & States of Matter',
+        qCount: 10, time: '~8 min',
+        qs: [
+          {type:'States',text:'How are particles arranged in a solid?',correct:'Held together very closely; they vibrate but do not move around much',opts:['Held together very closely; they vibrate but do not move around much','Quite close but able to move past each other easily','Far apart and moving very quickly','Loosely arranged and able to compress easily'],timer:15},
+          {type:'States',text:'What is the process called when a solid changes to a liquid?',correct:'Melting',opts:['Melting','Evaporation','Condensation','Sublimation'],timer:8},
+          {type:'States',text:'What is the process called when a liquid changes to a gas?',correct:'Evaporation',opts:['Evaporation','Melting','Condensation','Sublimation'],timer:8},
+          {type:'States',text:'What is the process called when a gas changes to a liquid?',correct:'Condensation',opts:['Condensation','Freezing','Evaporation','Sublimation'],timer:8},
+          {type:'States',text:'What is the process called when a solid changes directly to a gas?',correct:'Sublimation',opts:['Sublimation','Melting','Evaporation','Freezing'],timer:8},
+          {type:'Heating Curve',text:'What happens to temperature during a change of state (e.g. melting)?',correct:'The temperature stays the same even though heat energy is still being absorbed',opts:['The temperature stays the same even though heat energy is still being absorbed','The temperature increases rapidly during melting','The temperature decreases as heat is absorbed','The temperature doubles during the change'],timer:15},
+          {type:'States',text:'Why can gases be compressed easily?',correct:'Because there is a lot of space between the particles',opts:['Because there is a lot of space between the particles','Because the particles are held very closely together','Because gas particles vibrate in place','Because gas particles move past each other slowly'],timer:15},
+          {type:'States',text:'What is "evaporation"?',correct:'The process when a liquid changes to a gas',opts:['The process when a liquid changes to a gas','The process when a solid changes to a liquid','The process when a gas changes to a liquid','The process when a solid changes directly to a gas'],timer:8},
+          {type:'Recall',text:'At what temperature does water boil?',correct:'100°C',opts:['100°C','0°C','50°C','78°C'],timer:8},
+          {type:'States',text:'Why do liquids take the shape of their container?',correct:'Because liquid particles can move past each other very easily',opts:['Because liquid particles can move past each other very easily','Because liquid particles are far apart and move quickly','Because liquid particles vibrate on the spot','Because liquids have no fixed particle arrangement'],timer:15}
+        ]
+      },
+      {
+        name: 'Cells & Biology',
+        qCount: 12, time: '~9 min',
+        qs: [
+          {type:'Cell Biology',text:'What is a prokaryotic cell?',correct:'A cell without a nucleus — DNA is in the cytoplasm',opts:['A cell without a nucleus — DNA is in the cytoplasm','A cell with a nucleus found in multicellular organisms','A specialised cell that carries oxygen in the blood','A cell with a cell wall found only in plants'],timer:15},
+          {type:'Cell Biology',text:'What is a eukaryotic cell?',correct:'A cell that contains a nucleus, found mainly in multicellular organisms',opts:['A cell that contains a nucleus, found mainly in multicellular organisms','A cell without a nucleus found in single-celled organisms','A plant cell that contains chloroplasts only','A prokaryotic cell found in bacteria'],timer:15},
+          {type:'Cell Part',text:'What is the function of the nucleus in a cell?',correct:'Contains genetic material which controls the activities of the cell',opts:['Contains genetic material which controls the activities of the cell','Most energy is released by respiration here','Protein synthesis happens here','Controls the movement of substances into and out of the cell'],timer:15},
+          {type:'Cell Part',text:'What is the function of mitochondria?',correct:'Most energy is released by respiration here',opts:['Most energy is released by respiration here','Protein synthesis happens here','Contains genetic material controlling cell activities','Strengthens the cell'],timer:8},
+          {type:'Cell Part',text:'What is the function of ribosomes?',correct:'Protein synthesis happens here',opts:['Protein synthesis happens here','Most energy is released by respiration here','Controls cell activities through genetic material','Absorbs light energy for photosynthesis'],timer:8},
+          {type:'Cell Part',text:'What is the function of chloroplasts?',correct:'Contain chlorophyll which absorbs light energy for photosynthesis',opts:['Contain chlorophyll which absorbs light energy for photosynthesis','Strengthens the cell wall','Filled with cell sap to keep the cell turgid','Controls movement of substances into and out of the cell'],timer:15},
+          {type:'Specialised Cells',text:'What is the function of a red blood cell?',correct:'To carry oxygen around the body',opts:['To carry oxygen around the body','To carry nerve impulses to different parts of the body','To absorb water and minerals from the soil','To join with the sperm cell and provide food for new cells'],timer:8},
+          {type:'Specialised Cells',text:'What special feature does a sperm cell have for movement?',correct:'A long tail for swimming',opts:['A long tail for swimming','Large surface area for oxygen to bind to','Long body with connections at each end','Large cytoplasm containing stored food'],timer:8},
+          {type:'Specialised Cells',text:'What is the function of a root hair cell?',correct:'To absorb water and minerals',opts:['To absorb water and minerals','To carry oxygen around the body','To join with the sperm cell','To carry nerve impulses'],timer:8},
+          {type:'Organisation',text:'In order of complexity, what comes after tissues in biology?',correct:'Organs',opts:['Organs','Organ systems','Organisms','Cells'],timer:8},
+          {type:'Organisation',text:'What is a tissue in biology?',correct:'A group of cells with a similar structure and function working together',opts:['A group of cells with a similar structure and function working together','A group of different tissues working together for a specific job','A group of different organs working together','A single cell performing a specialised function'],timer:15},
+          {type:'Organisation',text:'What is an organ system?',correct:'A group of different organs working together to do a particular job',opts:['A group of different organs working together to do a particular job','A group of cells with a similar structure and function','A single organ performing a specialised function','A group of organisms of the same species'],timer:15}
+        ]
+      },
+      {
+        name: 'Atoms, Elements & Compounds',
+        qCount: 10, time: '~8 min',
+        qs: [
+          {type:'Chemistry',text:'What is a compound?',correct:'A substance containing atoms of two or more different elements chemically joined together',opts:['A substance containing atoms of two or more different elements chemically joined together','A substance containing only one type of atom','A mixture of substances not chemically joined','A single element in its pure form'],timer:15},
+          {type:'Chemistry',text:'What is a mixture in chemistry?',correct:'Different substances that are not chemically joined to each other',opts:['Different substances that are not chemically joined to each other','Atoms of two or more elements chemically bonded','A single element in its purest form','A compound made from two types of atom'],timer:15},
+          {type:'Chemistry',text:'How many elements are there on the Periodic Table?',correct:'Over 100 different elements',opts:['Over 100 different elements','Exactly 100 elements','50 elements','Over 200 elements'],timer:8},
+          {type:'Chemistry',text:'What is the correct way to write the chemical symbol for magnesium?',correct:'Mg (capital M, lowercase g)',opts:['Mg (capital M, lowercase g)','mg (all lowercase)','MG (all capitals)','mG (lowercase m, capital G)'],timer:8},
+          {type:'Chemistry',text:'What does the chemical symbol Na stand for?',correct:'Sodium (from the word natrium)',opts:['Sodium (from the word natrium)','Nitrogen','Nickel','Neon'],timer:8},
+          {type:'Chemistry',text:'What does the chemical symbol W stand for?',correct:'Tungsten (from the word wolfram)',opts:['Tungsten (from the word wolfram)','Water','White phosphorus','Zinc'],timer:8},
+          {type:'Chemistry',text:'What molecule does water contain?',correct:'Two hydrogen atoms and one oxygen atom',opts:['Two hydrogen atoms and one oxygen atom','One hydrogen atom and two oxygen atoms','Two oxygen atoms and two hydrogen atoms','One hydrogen atom and one oxygen atom'],timer:8},
+          {type:'Chemistry',text:'What are the two categories that elements can be divided into?',correct:'Metals and non-metals',opts:['Metals and non-metals','Solids and gases','Atoms and molecules','Elements and compounds'],timer:8},
+          {type:'Chemistry',text:'Why do igneous rocks not contain fossils?',correct:'Any fossils in the original rock melted when the rock formed magma',opts:['Any fossils in the original rock melted when the rock formed magma','Igneous rocks form too slowly for fossils to be preserved','Igneous rocks only form deep underground away from organisms','Fossils cannot form in volcanic environments at all'],timer:15},
+          {type:'Rocks',text:'How are sedimentary rocks formed?',correct:'From broken remains of rocks transported, deposited, compacted and cemented together',opts:['From broken remains of rocks transported, deposited, compacted and cemented together','From magma that cooled slowly deep underground','From existing rocks changed by heat and pressure','From lava that cooled quickly on the Earth\'s surface'],timer:25}
+        ]
+      },
+      {
+        name: 'Energy Resources',
+        qCount: 10, time: '~8 min',
+        qs: [
+          {type:'Energy',text:'Why are fossil fuels called "non-renewable"?',correct:'Because they took millions of years to form and will eventually run out',opts:['Because they took millions of years to form and will eventually run out','Because they can be replaced within a human lifetime','Because they produce too much pollution to be useful','Because they are found only in very small quantities'],timer:15},
+          {type:'Energy',text:'What gas is released when fossil fuels burn, contributing to global warming?',correct:'Carbon dioxide',opts:['Carbon dioxide','Oxygen','Nitrogen','Sulphur trioxide'],timer:8},
+          {type:'Energy',text:'What gas do coal and gas release when burned that can cause acid rain?',correct:'Sulphur dioxide',opts:['Sulphur dioxide','Carbon dioxide','Nitrogen oxide','Hydrogen sulphide'],timer:8},
+          {type:'Energy Advantage',text:'What is an advantage of wind turbines as an energy source?',correct:'Low emissions and cheap to run',opts:['Low emissions and cheap to run','Very expensive to set up, cheap to run','Can produce electricity without any weather conditions','Produces large amounts of energy and low emissions'],timer:15},
+          {type:'Energy Disadvantage',text:'What is a disadvantage of solar cells?',correct:'Not always sunny and output does not always outweigh initial setup cost',opts:['Not always sunny and output does not always outweigh initial setup cost','They create large amounts of pollution','They require dangerous waste disposal','They are very cheap to set up but costly to run'],timer:15},
+          {type:'Energy',text:'What does the energy cost formula use?',correct:'Total cost = number of units × cost per unit',opts:['Total cost = number of units × cost per unit','Total cost = power (W) × time (min)','Total cost = voltage × current','Total cost = units ÷ cost per unit'],timer:15},
+          {type:'Energy Formula',text:'How do you calculate units of electricity (kWh)?',correct:'Power (kW) × time (h)',opts:['Power (kW) × time (h)','Power (W) × time (min)','Voltage (V) × current (A)','Energy (J) ÷ time (s)'],timer:15},
+          {type:'Energy Advantage',text:'What is an advantage of nuclear power?',correct:'Produces large amounts of energy and low emissions',opts:['Produces large amounts of energy and low emissions','No dangerous waste is produced','Very cheap to set up','Fully renewable and will not run out'],timer:15},
+          {type:'Energy Disadvantage',text:'What is a disadvantage of biomass as an energy source?',correct:'Requires land that could be used for food production',opts:['Requires land that could be used for food production','Creates huge amounts of carbon dioxide','Very expensive to run once set up','Cannot produce enough electricity for widespread use'],timer:15},
+          {type:'Energy',text:'What is a disadvantage of renewable energy generators currently?',correct:'Most are expensive to set up, and some rely heavily on the weather',opts:['Most are expensive to set up, and some rely heavily on the weather','They produce too much dangerous waste','They are not capable of producing large amounts of energy','They release sulphur dioxide causing acid rain'],timer:15}
+        ]
+      },
+      {
+        name: 'Light, Waves & Electricity',
+        qCount: 12, time: '~9 min',
+        qs: [
+          {type:'Physics',text:'What is the law of reflection?',correct:'The angle of incidence equals the angle of reflection (i = r)',opts:['The angle of incidence equals the angle of reflection (i = r)','The angle of incidence is always 90°','Light always reflects at 45° from a mirror','The reflected ray travels in the opposite direction'],timer:15},
+          {type:'Physics',text:'What is refraction?',correct:'Light changing speed when passing between substances of different density, causing a change in direction',opts:['Light changing speed when passing between substances of different density, causing a change in direction','Light bouncing off a reflective surface','Light splitting into seven colours in a prism','Light being absorbed by a dark surface'],timer:15},
+          {type:'Physics',text:'What are the primary colours of light?',correct:'Red, green and blue',opts:['Red, green and blue','Red, yellow and blue','Red, blue and yellow','Cyan, magenta and yellow'],timer:8},
+          {type:'Physics',text:'What is a transverse wave?',correct:'A wave where particles move perpendicular (at right angles) to the direction of energy transfer',opts:['A wave where particles move perpendicular (at right angles) to the direction of energy transfer','A wave where particles move parallel to the direction of energy transfer','A wave that can only travel through solids','A wave that transfers matter as well as energy'],timer:15},
+          {type:'Physics',text:'What is the unit of electrical resistance?',correct:'Ohms (Ω)',opts:['Ohms (Ω)','Amps (A)','Volts (V)','Watts (W)'],timer:8},
+          {type:'Physics',text:'What is Ohm\'s Law?',correct:'Potential Difference (V) = Current (I) × Resistance (R)',opts:['Potential Difference (V) = Current (I) × Resistance (R)','Current (A) = Voltage (V) × Resistance (Ω)','Power (W) = Voltage (V) ÷ Current (A)','Resistance (Ω) = Voltage (V) × Current (A)'],timer:15},
+          {type:'Physics',text:'What is the unit of current?',correct:'Amps (A)',opts:['Amps (A)','Volts (V)','Ohms (Ω)','Watts (W)'],timer:8},
+          {type:'Physics',text:'How is an ammeter connected in a circuit to measure current?',correct:'In series with the component',opts:['In series with the component','In parallel with the component','Across the battery terminals only','Between the battery and the switch'],timer:15},
+          {type:'Physics',text:'What is the frequency of a wave?',correct:'How many complete waves pass a point every second, measured in Hertz (Hz)',opts:['How many complete waves pass a point every second, measured in Hertz (Hz)','The maximum height of a wave from its resting position','The distance between two consecutive peaks','The speed at which the wave travels'],timer:15},
+          {type:'Physics',text:'In a parallel circuit, how is potential difference distributed?',correct:'The potential difference is the same on each branch',opts:['The potential difference is the same on each branch','The potential difference splits between branches','The potential difference is zero in parallel circuits','Only one branch receives the full potential difference'],timer:15},
+          {type:'Physics',text:'What colours make up the electromagnetic spectrum from shortest to longest wavelength?',correct:'Gamma rays, X-rays, UV, Visible, Infrared, Microwave, Radio',opts:['Gamma rays, X-rays, UV, Visible, Infrared, Microwave, Radio','Radio, Microwave, Infrared, Visible, UV, X-rays, Gamma','Red, Orange, Yellow, Green, Blue, Indigo, Violet','Visible, Infrared, Microwave, Radio, UV, X-rays, Gamma'],timer:25},
+          {type:'Biology',text:'What is photosynthesis?',correct:'The process where plants use sunlight, water and CO₂ to create oxygen and glucose',opts:['The process where plants use sunlight, water and CO₂ to create oxygen and glucose','The process where plants absorb nutrients from the soil','The process where animals convert food into energy','The process where cells divide to form new cells'],timer:15}
+        ]
+      },
+      {
+        name: 'DNA, Reproduction & Separation',
+        qCount: 10, time: '~8 min',
+        qs: [
+          {type:'Biology',text:'What does DNA stand for?',correct:'Deoxyribonucleic acid',opts:['Deoxyribonucleic acid','Deoxyribose nucleic acid','Double helix nucleotide acid','Deoxyribonucleotide adenine'],timer:8},
+          {type:'Biology',text:'What are the four nucleotide bases in DNA?',correct:'Adenine, thymine, cytosine and guanine',opts:['Adenine, thymine, cytosine and guanine','Adenine, uracil, cytosine and guanine','Adenine, thymine, cytosine and uridine','Arginine, thymine, cysteine and glycine'],timer:15},
+          {type:'Biology',text:'What shape is the DNA molecule?',correct:'A double helix',opts:['A double helix','A single helix','A straight ladder shape','A circular ring'],timer:8},
+          {type:'Biology',text:'Which nucleotides pair together in DNA?',correct:'A pairs with T, and G pairs with C',opts:['A pairs with T, and G pairs with C','A pairs with G, and T pairs with C','A pairs with C, and G pairs with T','A pairs with A, and T pairs with T'],timer:15},
+          {type:'Biology',text:'In what year was the double helix structure of DNA discovered?',correct:'1953',opts:['1953','1869','1869','2003'],timer:8},
+          {type:'Chemistry',text:'What is filtration used for?',correct:'Separating an insoluble solid from a liquid',opts:['Separating an insoluble solid from a liquid','Separating two liquids with different boiling points','Separating a dissolved solid from a solution','Separating a gas from a liquid'],timer:8},
+          {type:'Chemistry',text:'What is simple distillation used for?',correct:'Separating the solvent from a solution',opts:['Separating the solvent from a solution','Separating an insoluble solid from a liquid','Separating two insoluble solids','Separating substances by size'],timer:8},
+          {type:'Chemistry',text:'In filtration, what is the substance that passes through the filter paper called?',correct:'The filtrate',opts:['The filtrate','The residue','The solvent','The solute'],timer:8},
+          {type:'Chemistry',text:'What is solubility?',correct:'The maximum mass of solute that dissolves in a certain volume of solvent',opts:['The maximum mass of solute that dissolves in a certain volume of solvent','The ability of a substance to dissolve in any liquid','The property of a substance that will not dissolve','The process of mixing a solute into a solvent'],timer:15},
+          {type:'Biology',text:'What substances does the placenta transfer from mother to baby?',correct:'Oxygen, food and antibodies',opts:['Oxygen, food and antibodies','Carbon dioxide, urea and oxygen','Oxygen, carbon dioxide and food','Water, glucose and carbon dioxide'],timer:15}
+        ]
+      },
+      {
+        name: 'Skeleton & Joints',
+        qCount: 8, time: '~6 min',
+        qs: [
+          {type:'Biology',text:'What are the four main functions of the skeleton?',correct:'Protect vital organs, support the body, help movement, and make blood cells',opts:['Protect vital organs, support the body, help movement, and make blood cells','Protect organs, provide energy, help movement, and store minerals','Support the body, absorb nutrients, produce hormones, and make blood cells','Protect organs, support the body, regulate temperature, and produce enzymes'],timer:25},
+          {type:'Biology',text:'What does cartilage do in a joint?',correct:'Covers the ends of bones to prevent them wearing away — it is tough and smooth',opts:['Covers the ends of bones to prevent them wearing away — it is tough and smooth','Joins two bones together to stop the joint falling apart','Fills the joint cavity to keep it slippery','Connects muscles to bones across the joint'],timer:15},
+          {type:'Biology',text:'What is synovial fluid?',correct:'A liquid that keeps the joint slippery',opts:['A liquid that keeps the joint slippery','A tough substance covering the ends of bones','Tissue that joins two bones together','The membrane surrounding the joint cavity'],timer:8},
+          {type:'Biology',text:'What type of joint is the elbow?',correct:'A hinge joint',opts:['A hinge joint','A ball and socket joint','A pivot joint','A fixed joint'],timer:8},
+          {type:'Biology',text:'Which joints allow movement in all directions and rotation?',correct:'Ball and socket joints (hip and shoulder)',opts:['Ball and socket joints (hip and shoulder)','Hinge joints (elbow and knee)','Pivot joints (neck)','Fixed joints (skull)'],timer:8},
+          {type:'Biology',text:'What bones are made in bone marrow?',correct:'Red blood cells and white blood cells',opts:['Red blood cells and white blood cells','Only red blood cells','Platelets and plasma only','Nerve cells and muscle cells'],timer:8},
+          {type:'Biology',text:'What is the function of ligaments?',correct:'Tough tissue that joins two bones in a joint and stops it falling apart',opts:['Tough tissue that joins two bones in a joint and stops it falling apart','Tough smooth substance covering the ends of bones','Liquid that keeps the joint slippery','Connects muscles to bones to allow movement'],timer:15},
+          {type:'Biology',text:'What is the medical name for the kneecap?',correct:'Patella',opts:['Patella','Fibula','Tibia','Sternum'],timer:8}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'history', name: 'History', icon: '⚔️',
+    accent: '#f97316',
+    desc: 'Medieval England, Norman Conquest, Feudal System, Renaissance, Reformation',
+    topics: [
+      {
+        name: 'Medieval Monarchs — Cycles 1 & 2',
+        qCount: 15, time: '~12 min',
+        qs: [
+          {type:'Recall',text:'On what date did Edward the Confessor die, causing a succession crisis?',correct:'5th January 1066',opts:['5th January 1066','14th October 1066','1st September 1065','25th December 1065'],timer:8},
+          {type:'Definition',text:'What was the "Witan"?',correct:'A council of noblemen and churchmen who advised the king and chose a new king when he died',opts:['A council of noblemen and churchmen who advised the king and chose a new king when he died','A professional army of Anglo-Saxon soldiers','The feudal system of land ownership','A defensive tactic using linked shields'],timer:15},
+          {type:'Recall',text:'What was Harold Godwinson\'s title and role?',correct:'Sub-Regulus and Earl of Wessex — closest advisor to Edward the Confessor',opts:['Sub-Regulus and Earl of Wessex — closest advisor to Edward the Confessor','Duke of Normandy and military leader','Great-nephew of Edward the Confessor','Viking king related to Harthacnut'],timer:15},
+          {type:'Recall',text:'On what date was the Battle of Hastings?',correct:'14th October 1066',opts:['14th October 1066','5th January 1066','1st September 1066','25th December 1066'],timer:8},
+          {type:'Definition',text:'What was the "fyrd"?',correct:'Part-time soldiers called up in time of war to defend their local area',opts:['Part-time soldiers called up in time of war to defend their local area','Well-trained professional Anglo-Saxon soldiers','A Norman castle building technique','The common defensive tactic of linking shields'],timer:15},
+          {type:'Definition',text:'What were "housecarls"?',correct:'Well-trained professional Anglo-Saxon soldiers',opts:['Well-trained professional Anglo-Saxon soldiers','Part-time soldiers called up in wartime','Viking warriors led by Harald Hardrada','Norman knights who fought for William'],timer:8},
+          {type:'Feudal System',text:'In the Feudal System, what did barons provide in return for land?',correct:'Loyalty and armies for the king',opts:['Loyalty and armies for the king','Produce and taxes to the king','Fighting in the barons\' armies','All the farming work on the land'],timer:15},
+          {type:'Recall',text:'How many castles did William the Conqueror build during his reign?',correct:'500',opts:['500','100','250','1000'],timer:8},
+          {type:'Recall',text:'What was the "Harrying of the North"?',correct:'William\'s brutal 1069 campaign of terror in north England to punish rebellion',opts:['William\'s brutal 1069 campaign of terror in north England to punish rebellion','The Battle of Hastings in 1066','The signing of the Magna Carta','The Norman castle-building programme'],timer:15},
+          {type:'Recall',text:'What percentage of northern England was considered wasteland 20 years after the Harrying?',correct:'60%',opts:['60%','40%','80%','30%'],timer:8},
+          {type:'Recall',text:'Who was Thomas Becket?',correct:'Archbishop of Canterbury from 1162, murdered on 29th December 1170',opts:['Archbishop of Canterbury from 1162, murdered on 29th December 1170','King of England between 1154 and 1189','The elected leader of the barons who forced King John to sign the Magna Carta','The leader of the Viking invasion in 1066'],timer:15},
+          {type:'Magna Carta',text:'Where was King John forced to sign the Magna Carta?',correct:'Runnymede',opts:['Runnymede','Westminster','Canterbury','York'],timer:8},
+          {type:'Magna Carta',text:'What were the key clauses of the Magna Carta?',correct:'The king is not above the law, no punishment without trial by jury, a Great Council to advise the king',opts:['The king is not above the law, no punishment without trial by jury, a Great Council to advise the king','The king owns all land, barons owe military service, peasants must pay taxes','Trial by combat is abolished, new castles to be built, church to be obeyed','The king may tax freely, barons are not above the law, church is independent'],timer:25},
+          {type:'Recall',text:'When did the First Crusade take place?',correct:'1096–1099',opts:['1096–1099','1215–1217','1162–1170','1066–1087'],timer:8},
+          {type:'Definition',text:'What was the "succession crisis" of 1066?',correct:'When nobody was certain who the next King would be, leaving contenders to fight for it',opts:['When nobody was certain who the next King would be, leaving contenders to fight for it','When Harold Godwinson marched 185 miles in five days','When William built 500 castles across England','When the Witan chose Edgar Atheling as king'],timer:15}
+        ]
+      },
+      {
+        name: 'Renaissance & Reformation — Cycles 3 & 4',
+        qCount: 15, time: '~12 min',
+        qs: [
+          {type:'Recall',text:'When did the Black Death arrive in England?',correct:'1348',opts:['1348','1440','1534','1066'],timer:8},
+          {type:'Recall',text:'What fraction of the population did the Black Death kill?',correct:'1/3 (one third)',opts:['1/3 (one third)','1/2 (one half)','1/4 (one quarter)','2/3 (two thirds)'],timer:8},
+          {type:'Definition',text:'What does "Renaissance" mean?',correct:'"Rebirth" — a period where Classical ideas were rediscovered and challenged',opts:['"Rebirth" — a period where Classical ideas were rediscovered and challenged','"Revolution" — a period of violent political change','"Reformation" — a period of religious change in England','"Renewal" — a period of rebuilding after the Black Death'],timer:15},
+          {type:'Recall',text:'Who invented the printing press and in what year?',correct:'Johannes Gutenberg in 1440',opts:['Johannes Gutenberg in 1440','Thomas Cromwell in 1536','Andreas Vesalius in 1543','Martin Luther in 1517'],timer:8},
+          {type:'Recall',text:'Who was Vesalius?',correct:'An anatomist who illustrated an accurate book on human anatomy contradicting Galen',opts:['An anatomist who illustrated an accurate book on human anatomy contradicting Galen','A Roman doctor who believed in the Four Humours','A Protestant reformer who nailed 95 Points to a church door','An Archbishop of Canterbury who supported Henry VIII'],timer:15},
+          {type:'Recall',text:'What did Galen believe caused illness?',correct:'The Four Humours — four substances in the body that caused illness if out of balance',opts:['The Four Humours — four substances in the body that caused illness if out of balance','Fleas on rats spreading disease through bites','Sins against the Church bringing divine punishment','Miasmas or bad air spreading from decaying matter'],timer:15},
+          {type:'Reformation',text:'What did Martin Luther nail to the church door at Wittenberg?',correct:'95 Thesis or Points, triggering the Reformation',opts:['95 Thesis or Points, triggering the Reformation','A letter of excommunication to the Pope','The Act of Supremacy separating England from Rome','Letters of Indulgence purchased from the Church'],timer:15},
+          {type:'Reformation',text:'What did the Act of Supremacy of 1534 do?',correct:'Made Henry VIII head of the Church in England instead of the Pope',opts:['Made Henry VIII head of the Church in England instead of the Pope','Made Protestantism compulsory throughout England','Began the dissolution of the monasteries','Allowed Henry to divorce Catherine of Aragon legally'],timer:15},
+          {type:'Definition',text:'What was Henry\'s "Great Matter"?',correct:'His desire to divorce Catherine to allow him to marry a younger wife to have a son',opts:['His desire to divorce Catherine to allow him to marry a younger wife to have a son','His plan to dissolve all monasteries in England','His conflict with the Pope over religious doctrine','His campaign to suppress the Pilgrimage of Grace'],timer:15},
+          {type:'Recall',text:'What was the "Pilgrimage of Grace"?',correct:'An uprising mainly in the north of England against Henry\'s religious changes',opts:['An uprising mainly in the north of England against Henry\'s religious changes','A peaceful march supporting Henry\'s religious reforms','The Catholic Church\'s campaign against Protestantism','A rebellion against William the Conqueror in 1069'],timer:15},
+          {type:'Recall',text:'What was the estimated size of the Pilgrimage of Grace?',correct:'35,000',opts:['35,000','10,000','100,000','5,000'],timer:8},
+          {type:'Recall',text:'How many Protestants were burned at the stake during Mary I\'s reign?',correct:'284',opts:['284','95','500','100'],timer:8},
+          {type:'Recall',text:'What was Mary I\'s nickname given by Protestants?',correct:'Bloody Mary',opts:['Bloody Mary','Bloody Elizabeth','Terrible Mary','Queen of Heretics'],timer:8},
+          {type:'Definition',text:'What was the "Middle Way" or Religious Settlement under Elizabeth I?',correct:'Elizabeth\'s attempt to bring peace to Catholics and Protestants in England',opts:['Elizabeth\'s attempt to bring peace to Catholics and Protestants in England','Elizabeth\'s campaign to restore Catholicism to England','A compromise between Henry VIII and the Pope','Elizabeth\'s policy of burning both Catholics and Protestants'],timer:15},
+          {type:'Recall',text:'What was excommunication?',correct:'Being excluded from the Catholic Church and heaven',opts:['Being excluded from the Catholic Church and heaven','Being pardoned for sins by buying letters of indulgence','Being made head of the Church of England','Being imprisoned by the Pope for heresy'],timer:8}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'geography', name: 'Geography', icon: '🌍',
+    accent: '#4ade80',
+    desc: 'Continents, oceans, maps, India, UK landscapes, rivers, population',
+    topics: [
+      {
+        name: 'Fantastic Places — Cycles 1 & 2',
+        qCount: 15, time: '~11 min',
+        qs: [
+          {type:'Recall',text:'How many continents are there in the world?',correct:'7',opts:['7','5','6','8'],timer:8},
+          {type:'Recall',text:'How many oceans are there in the world?',correct:'5',opts:['5','4','6','7'],timer:8},
+          {type:'Definition',text:'What is physical geography?',correct:'The study of natural environments and landforms',opts:['The study of natural environments and landforms','The study of societies, cultures and economies','The study of how humans impact the Earth','The study of political boundaries and countries'],timer:8},
+          {type:'Definition',text:'What is human geography?',correct:'The study of societies, cultures and economies',opts:['The study of societies, cultures and economies','The study of natural environments and landforms','The study of political boundaries and countries','The study of climate and weather patterns'],timer:8},
+          {type:'Maps',text:'When giving a grid reference, in which order do you read the numbers?',correct:'Along the corridor (horizontal) first, then up the stairs (vertical)',opts:['Along the corridor (horizontal) first, then up the stairs (vertical)','Up the stairs (vertical) first, then along the corridor','From the centre outward in all directions','From north to south, then east to west'],timer:15},
+          {type:'Maps',text:'What are contour lines on a map?',correct:'Brown lines drawn on maps joining places of the same height',opts:['Brown lines drawn on maps joining places of the same height','Lines showing political boundaries between countries','Blue lines showing rivers and water features','Lines showing roads and transport routes'],timer:15},
+          {type:'Maps',text:'What does scale on a map refer to?',correct:'The relationship between distance on a map and the actual distance on the ground',opts:['The relationship between distance on a map and the actual distance on the ground','The height of mountains shown on a map','The direction of north shown by a compass rose','The colours used to show different land types'],timer:15},
+          {type:'Definition',text:'What is "relief" in geography?',correct:'The height and shape of the land',opts:['The height and shape of the land','The speed of water flowing in a river','The density of population in an area','The type of rock found underground'],timer:8},
+          {type:'Definition',text:'What is urbanisation?',correct:'The increase in the proportion of people living in towns and cities',opts:['The increase in the proportion of people living in towns and cities','The movement of people from one country to another','Areas of poor-quality housing around the edge of cities','The decrease in rural populations over time'],timer:15},
+          {type:'Definition',text:'What is a squatter settlement?',correct:'An area of poor-quality housing where residents don\'t own the land, lacking basic services',opts:['An area of poor-quality housing where residents don\'t own the land, lacking basic services','A planned housing development on the edge of cities','A rural area with low population density','A temporary camp for displaced people after a disaster'],timer:15},
+          {type:'Definition',text:'What is migration?',correct:'The movement of people from one permanent location to another',opts:['The movement of people from one permanent location to another','The increase in population through births','The decrease in population through deaths','The growth of cities at the expense of rural areas'],timer:8},
+          {type:'Industry',text:'What is primary industry?',correct:'Extracting raw materials',opts:['Extracting raw materials','Manufacturing raw materials into products','Providing a service','Hi-tech industry and research'],timer:8},
+          {type:'Industry',text:'What is quaternary industry?',correct:'Hi-tech industry',opts:['Hi-tech industry','Extracting raw materials','Manufacturing raw materials into products','Providing a service'],timer:8},
+          {type:'Definition',text:'What is a "pull factor" in migration?',correct:'Something that attracts individuals to migrate to a certain place',opts:['Something that attracts individuals to migrate to a certain place','Something that encourages an individual to leave a certain place','The distance between a person\'s home and a new location','The cost of moving to a new country or area'],timer:15},
+          {type:'India',text:'What is Dharavi?',correct:'A squatter settlement in Mumbai, India, with a population of about one million',opts:['A squatter settlement in Mumbai, India, with a population of about one million','The capital city of India','A river that flows through central India','A mountain range in northern India'],timer:15}
+        ]
+      },
+      {
+        name: 'What Makes Britain Beautiful — Cycles 3 & 4',
+        qCount: 15, time: '~11 min',
+        qs: [
+          {type:'Recall',text:'What does the United Kingdom consist of?',correct:'England, Scotland, Wales and Northern Ireland',opts:['England, Scotland, Wales and Northern Ireland','England, Scotland and Wales only','England, Scotland, Wales, Northern Ireland and Republic of Ireland','England, Scotland, Ireland and Wales'],timer:8},
+          {type:'Definition',text:'What is geology?',correct:'The study of the physical features and history of Earth',opts:['The study of the physical features and history of Earth','The study of natural environments and landforms','The study of the water cycle and rivers','The study of rocks only'],timer:8},
+          {type:'Definition',text:'What is weathering?',correct:'The breakdown of rocks at the Earth\'s surface by rainwater, temperature extremes and biological activity',opts:['The breakdown of rocks at the Earth\'s surface by rainwater, temperature extremes and biological activity','The wearing away of rock and soil by moving water or ice','The movement of sediment carried downstream','When material is dropped in a new location after being transported'],timer:15},
+          {type:'Definition',text:'What is erosion?',correct:'The wearing away of rock and soil',opts:['The wearing away of rock and soil','The breakdown of rocks at the Earth\'s surface','The movement of sediment downstream','When eroded material is dropped in a new location'],timer:8},
+          {type:'Definition',text:'What is a glacier?',correct:'A slowly moving body of ice formed by the build-up and compaction of snow',opts:['A slowly moving body of ice formed by the build-up and compaction of snow','A steep-sided valley left by a retreating waterfall','An armchair-shaped hollow high on a mountain','A bend in a river formed by erosion and deposition'],timer:15},
+          {type:'Definition',text:'What is a corrie?',correct:'An armchair-shaped hollow high on a mountain with steep back and side walls',opts:['An armchair-shaped hollow high on a mountain with steep back and side walls','A slowly moving body of ice formed from compacted snow','A steep-sided valley formed by a retreating waterfall','A river bend formed by erosion and deposition'],timer:15},
+          {type:'Rivers',text:'What is the source of a river?',correct:'Where the river begins, usually on hills or mountains',opts:['Where the river begins, usually on hills or mountains','Where the river enters the sea, ocean or lake','A steep vertical drop in the river channel','A bend in the river formed by erosion and deposition'],timer:8},
+          {type:'Rivers',text:'How is a waterfall formed?',correct:'A river flows over different rock types, eroding soft rock faster than hard rock, creating a vertical drop',opts:['A river flows over different rock types, eroding soft rock faster than hard rock, creating a vertical drop','A glacier carves out a valley leaving a steep drop','Deposition builds up a ledge of rock across the river','Two rivers meet creating a sudden drop in the channel'],timer:25},
+          {type:'Rivers',text:'What is a gorge?',correct:'A steep-sided valley left where a waterfall once was, formed as the waterfall retreats upstream',opts:['A steep-sided valley left where a waterfall once was, formed as the waterfall retreats upstream','An armchair-shaped hollow high on a mountain','A pool at the bottom of a waterfall formed by erosion','A bend in the river formed by erosion and deposition'],timer:15},
+          {type:'Rivers',text:'What is a meander?',correct:'A bend in the river, usually occurring in the middle or lower course, formed by erosion and deposition',opts:['A bend in the river, usually occurring in the middle or lower course, formed by erosion and deposition','A steep-sided valley left by a retreating waterfall','A pool at the bottom of a waterfall','The point where the river enters the sea or lake'],timer:15},
+          {type:'Definition',text:'What is metamorphic rock?',correct:'Rock formed from other rocks changed by heat and/or pressure',opts:['Rock formed from other rocks changed by heat and/or pressure','Rock formed from volcanic magma that has cooled and solidified','Rock formed from compressed eroded remains of other rocks','Rock formed from sediment deposited at the bottom of a river'],timer:15},
+          {type:'Definition',text:'What is igneous rock?',correct:'Rock formed from volcanic magma (molten rock) that has cooled and solidified',opts:['Rock formed from volcanic magma (molten rock) that has cooled and solidified','Rock formed from compressed eroded remains of other rocks','Rock formed from other rocks changed by heat and pressure','Rock formed from sediment deposited at the bottom of lakes'],timer:15},
+          {type:'UK Geography',text:'What is the prevailing wind direction in the UK?',correct:'Southwest',opts:['Southwest','Northwest','Northeast','Southeast'],timer:8},
+          {type:'Definition',text:'What is population density?',correct:'The number of people living in a certain area per square kilometre (km²)',opts:['The number of people living in a certain area per square kilometre (km²)','The total population of a country','The rate at which population is changing over time','The proportion of people living in cities versus rural areas'],timer:15},
+          {type:'Lines of Latitude',text:'At what degree is the Tropic of Cancer located?',correct:'23.5° North of the Equator',opts:['23.5° North of the Equator','23.5° South of the Equator','66.5° North of the Equator','0° at the Equator'],timer:8}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'spanish', name: 'Spanish', icon: '🇪🇸',
+    accent: '#f87171',
+    desc: 'Numbers, colours, school, family, hobbies, time, food, daily life, near future',
+    topics: [
+      {
+        name: 'School & Basics — Cycles 1 & 2',
+        qCount: 15, time: '~11 min',
+        qs: [
+          {type:'Vocabulary',text:'How do you say "I like" in Spanish?',correct:'Me gusta(n)',opts:['Me gusta(n)','Me encanta(n)','Odio','Prefiero'],timer:8},
+          {type:'Vocabulary',text:'How do you say "I love" in Spanish?',correct:'Me encanta(n)',opts:['Me encanta(n)','Me gusta(n)','No me gusta(n)','Detesto'],timer:8},
+          {type:'Vocabulary',text:'What does "porque es" mean in Spanish?',correct:'Because it is',opts:['Because it is','I like it','My favourite is','I prefer because'],timer:8},
+          {type:'Colours',text:'What is "azul" in English?',correct:'Blue',opts:['Blue','White','Red','Green'],timer:8},
+          {type:'Colours',text:'What is "rojo" in English?',correct:'Red',opts:['Red','White','Black','Purple'],timer:8},
+          {type:'Colours',text:'What is "verde" in English?',correct:'Green',opts:['Green','White','Blue','Purple'],timer:8},
+          {type:'Colours',text:'How do you make a colour plural in Spanish?',correct:'Add "s" to the end',opts:['Add "s" to the end','Add "a" to the end','Add "es" to the end','No change is needed'],timer:8},
+          {type:'School',text:'How do you say "Geography" in Spanish?',correct:'La geografía',opts:['La geografía','La historia','Las ciencias','La informática'],timer:8},
+          {type:'School',text:'How do you say "PE" in Spanish?',correct:'La educación física',opts:['La educación física','Las matemáticas','La informática','El dibujo'],timer:8},
+          {type:'Vocabulary',text:'What does "interesante" mean in English?',correct:'Interesting',opts:['Interesting','Boring','Fun','Exciting'],timer:8},
+          {type:'Vocabulary',text:'What does "aburrido/a" mean in English?',correct:'Boring',opts:['Boring','Fun','Interesting','Exciting'],timer:8},
+          {type:'Time',text:'How do you say "At half past nine" in Spanish?',correct:'A las nueve y media',opts:['A las nueve y media','A las nueve en punto','A las diez menos cuarto','Son las nueve y cinco'],timer:15},
+          {type:'Time',text:'What does "a menudo" mean in English?',correct:'Often',opts:['Often','Always','Never','Sometimes'],timer:8},
+          {type:'Time',text:'What does "siempre" mean in English?',correct:'Always',opts:['Always','Sometimes','Never','Often'],timer:8},
+          {type:'Vocabulary',text:'How do you say "My favourite subject is..." in Spanish?',correct:'Mi asignatura favorita es...',opts:['Mi asignatura favorita es...','Me gusta mucho la asignatura de...','Odio la asignatura de...','Mi clase preferida es...'],timer:15}
+        ]
+      },
+      {
+        name: 'Identity & Daily Life — Cycles 2 & 3',
+        qCount: 15, time: '~11 min',
+        qs: [
+          {type:'Verbs',text:'What does "Soy" mean in English?',correct:'I am',opts:['I am','He is / She is','We are','I have'],timer:8},
+          {type:'Verbs',text:'What does "Tengo" mean in English?',correct:'I have',opts:['I have','I am','I go','I do'],timer:8},
+          {type:'Verbs',text:'What does "Voy" mean in English?',correct:'I go',opts:['I go','I am','I do','I play'],timer:8},
+          {type:'Near Future',text:'How do you form the near future tense in Spanish?',correct:'Present tense of "ir" (to go) + infinitive',opts:['Present tense of "ir" (to go) + infinitive','Present tense of "tener" + infinitive','Present tense of "ser" + past participle','Infinitive + the ending -é, -ás, -á'],timer:15},
+          {type:'Near Future',text:'How do you say "I am going to play" in Spanish?',correct:'Voy a jugar',opts:['Voy a jugar','Juego a','Fui a jugar','Iré a jugar'],timer:8},
+          {type:'Negatives',text:'How do you say "I don\'t have siblings" in Spanish?',correct:'No tengo hermanos',opts:['No tengo hermanos','Tengo no hermanos','No hermanos tengo','Hermanos no tengo'],timer:8},
+          {type:'Vocabulary',text:'What does "trabajador/a" mean in English?',correct:'Hardworking',opts:['Hardworking','Lazy','Kind','Funny'],timer:8},
+          {type:'Vocabulary',text:'What does "perezoso/a" mean in English?',correct:'Lazy',opts:['Lazy','Hardworking','Shy','Nice'],timer:8},
+          {type:'Family',text:'What does "mis padres" mean in English?',correct:'My parents',opts:['My parents','My brothers','My grandparents','My family'],timer:8},
+          {type:'Relationships',text:'How do you say "I get on well with" in Spanish?',correct:'Me llevo bien con',opts:['Me llevo bien con','Me peleo con','Discuto con','No me llevo bien con'],timer:15},
+          {type:'Weather',text:'How do you say "it\'s sunny" in Spanish?',correct:'Hace sol',opts:['Hace sol','Hace frío','Llueve','Hace calor'],timer:8},
+          {type:'Weather',text:'What does "llueve" mean in English?',correct:'It\'s raining',opts:['It\'s raining','It\'s snowing','It\'s foggy','There is a storm'],timer:8},
+          {type:'Daily Life',text:'What does "Me levanto" mean in English?',correct:'I get up',opts:['I get up','I go to bed','I eat breakfast','I attend school'],timer:8},
+          {type:'Daily Life',text:'What does "Me acuesto" mean in English?',correct:'I go to bed',opts:['I go to bed','I get up','I attend school','I have dinner'],timer:8},
+          {type:'Comparatives',text:'How do you say "more... than" in Spanish?',correct:'más... (que)',opts:['más... (que)','menos... (que)','tan... (como)','muy... (para)'],timer:8}
+        ]
+      },
+      {
+        name: 'Entertainment & Food — Cycles 3 & 4',
+        qCount: 12, time: '~9 min',
+        qs: [
+          {type:'Food',text:'When giving an opinion about food in Spanish, what must you use before the food item?',correct:'The definite article (el, la, los, las)',opts:['The definite article (el, la, los, las)','The indefinite article (un, una, unos, unas)','No article is needed','The word "de" before the food item'],timer:15},
+          {type:'Food',text:'How do you say "I eat chicken" in Spanish?',correct:'Como pollo',opts:['Como pollo','Como el pollo','Me gusta el pollo','Tengo pollo'],timer:8},
+          {type:'Food',text:'What is "arroz" in English?',correct:'Rice',opts:['Rice','Bread','Pasta','Salad'],timer:8},
+          {type:'Food',text:'What is "pescado" in English?',correct:'Fish',opts:['Fish','Meat','Chicken','Ham'],timer:8},
+          {type:'Entertainment',text:'What does "Escucho" mean in English?',correct:'I listen',opts:['I listen','I watch','I play','I do'],timer:8},
+          {type:'Entertainment',text:'How do you say "To play football" in Spanish?',correct:'Jugar al fútbol',opts:['Jugar al fútbol','Jugar la fútbol','Jugar de fútbol','Hacer fútbol'],timer:15},
+          {type:'Entertainment',text:'What is the rule when using the preposition "a" before "el"?',correct:'a + el contracts to "al"',opts:['a + el contracts to "al"','a + el becomes "de el"','a + el stays as "a el"','a + el becomes "del"'],timer:15},
+          {type:'Culture',text:'What is the Feria de Abril?',correct:'The Seville Fair, held two weeks after Holy Week, running for seven days',opts:['The Seville Fair, held two weeks after Holy Week, running for seven days','A religious festival celebrated on Easter Sunday across Spain','A traditional bullfighting event held monthly in Madrid','A national Spanish holiday celebrating independence'],timer:15},
+          {type:'Time Expressions',text:'What does "la semana que viene" mean?',correct:'Next week',opts:['Next week','This weekend','Last week','Next year'],timer:8},
+          {type:'Vocabulary',text:'What does "emocionante" mean in English?',correct:'Exciting',opts:['Exciting','Boring','Easy','Dangerous'],timer:8},
+          {type:'Vocabulary',text:'What does "peligroso/a" mean in English?',correct:'Dangerous',opts:['Dangerous','Exciting','Practical','Active'],timer:8},
+          {type:'Numbers',text:'How do you say "30" in Spanish?',correct:'Treinta',opts:['Treinta','Veinte','Cuarenta','Cincuenta'],timer:8}
+        ]
+      }
+    ]
+  },
+  {
+    id: 'drama', name: 'Drama', icon: '🎭',
+    accent: '#a78bfa',
+    desc: 'Stagecraft elements: voice, physicality, gesture, proxemics, movement',
+    topics: [
+      {
+        name: 'Voice & Physicality — Cycles 1–4',
+        qCount: 8, time: '~6 min',
+        qs: [
+          {type:'Drama',text:'What is "proxemics" in drama?',correct:'The use of space and distance between performers to tell a story',opts:['The use of space and distance between performers to tell a story','The use of voice pitch and pace to convey emotion','The use of hand and arm movements to express emotion','The way a performer stands to show character'],timer:15},
+          {type:'Drama',text:'What do gestures involve in drama?',correct:'Using hands and arms to show emotions, big or calm',opts:['Using hands and arms to show emotions, big or calm','The way a performer walks and moves across the stage','How close or far apart performers stand from each other','The pitch and pace used when delivering lines'],timer:15},
+          {type:'Drama',text:'What does voice convey in a performance?',correct:'Emotion, thought and character through pitch and pace',opts:['Emotion, thought and character through pitch and pace','The position of actors on stage','The distance between performers','The gestures and movements of the body'],timer:15},
+          {type:'Drama',text:'What does posture and stance show in drama?',correct:'How a character feels — straight and strong suggests confidence; hunched suggests doubt',opts:['How a character feels — straight and strong suggests confidence; hunched suggests doubt','The distance between performers on stage','The emotions conveyed through hand movements','The speed and energy of movements across the stage'],timer:15},
+          {type:'Drama',text:'What does movement add to a dramatic scene?',correct:'Drama, joy and strife — it shows thoughts, heart and will',opts:['Drama, joy and strife — it shows thoughts, heart and will','The distance between performers on stage','The character\'s social status and wealth','The emotions conveyed through facial expression only'],timer:15},
+          {type:'Drama',text:'What do facial expressions communicate in drama?',correct:'What a performer is feeling deep down — a clue to inner emotion',opts:['What a performer is feeling deep down — a clue to inner emotion','The distance between performers on stage','The speed and direction of movement across the stage','The pitch and tone of the performer\'s voice'],timer:15},
+          {type:'Drama',text:'What are the six elements of stagecraft?',correct:'Voice, facial expressions, posture, gesture, movement and proxemics',opts:['Voice, facial expressions, posture, gesture, movement and proxemics','Voice, tone, pitch, pace, rhythm and volume','Lighting, sound, costume, props, set and make-up','Script, direction, acting, design, lighting and sound'],timer:25},
+          {type:'Drama',text:'In proxemics, what does standing very close to another character typically suggest?',correct:'Intimacy, threat or strong emotion between characters',opts:['Intimacy, threat or strong emotion between characters','Indifference or lack of connection between characters','Respect and formality between characters','Confusion or uncertainty about the other character'],timer:15}
+        ]
+      }
+    ]
+  }
+];
+
+// ===== STATE =====
+let settings = { shuffle: true, hints: true };
+let currentSubjectId = null;
+let currentTopicIndex = null;
+let currentQuestions = [];
+let qIndex = 0;
+let score = 0;
+let wrong = 0;
+let streak = 0;
+let missedQs = [];
+let timerInterval = null;
+let timerSeconds = 0;
+let answered = false;
+let titleClicks = 0;
+let konamiSeq = [];
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let typedBuffer = '';
+let tipShown = false;
+
+// ===== INIT =====
+function init() {
+  renderSubjectCards();
+  document.addEventListener('keydown', handleKeyDown);
+  document.getElementById('site-title').addEventListener('click', () => {
+    titleClicks++;
+    if (titleClicks >= 5) {
+      titleClicks = 0;
+      toast('👑 5 clicks = secret respect. You\'re clearly dedicated.');
+    }
+  });
+}
+
+function renderSubjectCards() {
+  const grid = document.getElementById('subjects-grid');
+  grid.innerHTML = SUBJECTS.map(s => `
+    <div class="subject-card" style="--accent:${s.accent}" onclick="showSubject('${s.id}')">
+      <div class="card-icon">${s.icon}</div>
+      <div class="card-subject">${s.name}</div>
+      <div class="card-meta">${s.topics.length} topic${s.topics.length !== 1 ? 's' : ''}</div>
+      <div class="card-desc">${s.desc}</div>
+    </div>
+  `).join('');
+}
+
+// ===== SCREEN TRANSITIONS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showLanding() {
+  clearTimer();
+  showScreen('landing');
+}
+
+function showSubject(id) {
+  const subj = SUBJECTS.find(s => s.id === id);
+  if (!subj) return;
+  currentSubjectId = id;
+  document.getElementById('sp-icon').textContent = subj.icon;
+  document.getElementById('sp-title').textContent = subj.name;
+  const grid = document.getElementById('topics-grid');
+  grid.innerHTML = subj.topics.map((t, i) => `
+    <div class="topic-card" onclick="startQuiz('${id}', ${i})">
+      <div class="topic-num">Topic ${i + 1}</div>
+      <div class="topic-name">${t.name}</div>
+      <div class="topic-stats">
+        <span class="topic-stat">❓ ${t.qs.length} questions</span>
+        <span class="topic-stat">⏱ ${t.time}</span>
+      </div>
+    </div>
+  `).join('');
+  showScreen('subject-page');
+}
+
+// ===== QUIZ =====
+function startQuiz(subjectId, topicIdx) {
+  const subj = SUBJECTS.find(s => s.id === subjectId);
+  currentSubjectId = subjectId;
+  currentTopicIndex = topicIdx;
+  let qs = [...subj.topics[topicIdx].qs];
+  if (settings.shuffle) qs = shuffle(qs);
+  currentQuestions = qs;
+  qIndex = 0; score = 0; wrong = 0; streak = 0;
+  missedQs = [];
+  answered = false;
+  document.getElementById('q-subject-label').textContent = `${subj.icon} ${subj.name} — ${subj.topics[topicIdx].name}`;
+  showScreen('quiz-screen');
+  renderQuestion();
+}
+
+function startMegaQuiz() {
+  const allQs = SUBJECTS.flatMap(s => s.topics.flatMap(t => t.qs.map(q => ({...q, _subject: s.name}))));
+  const shuffled = shuffle(allQs).slice(0, 25);
+  currentSubjectId = '__mega';
+  currentTopicIndex = null;
+  currentQuestions = shuffled;
+  qIndex = 0; score = 0; wrong = 0; streak = 0;
+  missedQs = [];
+  answered = false;
+  document.getElementById('q-subject-label').textContent = '⚡ All Subjects Mega Quiz';
+  showScreen('quiz-screen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (qIndex >= currentQuestions.length) { showResults(); return; }
+  const q = currentQuestions[qIndex];
+  answered = false;
+  const total = currentQuestions.length;
+  document.getElementById('q-counter').textContent = `${qIndex + 1} / ${total}`;
+  document.getElementById('q-progress').style.width = `${(qIndex / total) * 100}%`;
+  document.getElementById('q-correct').textContent = score;
+  document.getElementById('q-wrong').textContent = wrong;
+  document.getElementById('q-type').textContent = q.type;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('feedback-box').textContent = '';
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.className = 'next-btn';
+
+  // Regenerate animation
+  const qCard = document.getElementById('question-card');
+  qCard.style.animation = 'none';
+  qCard.offsetHeight; // reflow
+  qCard.style.animation = '';
+
+  // Render options
+  let opts = [...q.opts];
+  if (settings.shuffle) opts = shuffle(opts);
+  const labels = ['A','B','C','D'];
+  document.getElementById('options-grid').innerHTML = opts.map((o, i) => `
+    <button class="option-btn" onclick="selectAnswer(this, '${escapeAttr(o)}', '${escapeAttr(q.correct)}')">
+      <span class="option-label">${labels[i]}</span>
+      <span>${o}</span>
+    </button>
+  `).join('');
+
+  // Timer
+  startTimer(q.timer);
+
+  // Streak badge
+  updateStreakBadge();
+}
+
+function escapeAttr(s) {
+  return s.replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+}
+
+function selectAnswer(btn, chosen, correct) {
+  if (answered) return;
+  answered = true;
+  clearTimer();
+  resetTimerBar();
+
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.disabled = true);
+  allBtns.forEach(b => {
+    if (b.querySelector('span:last-child').textContent === correct) b.classList.add('correct');
+  });
+
+  const isCorrect = chosen === correct;
+  const fb = document.getElementById('feedback-box');
+  const q = currentQuestions[qIndex];
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+    streak++;
+    document.getElementById('q-correct').textContent = score;
+    fb.textContent = '✓ Correct!';
+    fb.className = 'feedback-box correct-fb show';
+    if (score === 1 && score === score) toast('✓ First point! Let\'s build on that.');
+    checkStreak();
+  } else {
+    btn.classList.add('wrong');
+    wrong++;
+    streak = 0;
+    document.getElementById('q-wrong').textContent = wrong;
+    if (settings.hints) {
+      fb.textContent = `✗ Not quite — the answer was: ${correct}`;
+    } else {
+      fb.textContent = '✗ Not quite!';
+    }
+    fb.className = 'feedback-box wrong-fb show';
+    missedQs.push({ q: q.text, a: correct });
+  }
+
+  updateStreakBadge();
+  document.getElementById('next-btn').className = 'next-btn visible';
+}
+
+function checkStreak() {
+  if (streak === 3) toast('🔥 3 in a row! Keep going!');
+  if (streak === 5) toast('🔥 5 in a row! You\'re on a roll!');
+  if (streak === 10) toast('⚡ 10 streak! Absolute legend energy.');
+}
+
+function updateStreakBadge() {
+  const badge = document.getElementById('streak-badge');
+  if (streak >= 3) {
+    badge.classList.add('visible');
+    document.getElementById('streak-count').textContent = streak;
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function nextQuestion() {
+  qIndex++;
+  renderQuestion();
+}
+
+function quitQuiz() {
+  clearTimer();
+  if (currentTopicIndex !== null) {
+    showSubject(currentSubjectId);
+  } else {
+    showLanding();
+  }
+}
+
+// ===== TIMER =====
+function startTimer(seconds) {
+  timerSeconds = seconds;
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  bar.className = 'timer-bar';
+  bar.offsetHeight;
+
+  let elapsed = 0;
+  const step = 100;
+  timerInterval = setInterval(() => {
+    elapsed += step;
+    const pct = Math.max(0, 100 - (elapsed / (seconds * 1000)) * 100);
+    bar.style.transition = `width ${step}ms linear`;
+    bar.style.width = pct + '%';
+    const remaining = seconds - (elapsed / 1000);
+    if (remaining <= seconds * 0.33) bar.className = 'timer-bar danger';
+    else if (remaining <= seconds * 0.66) bar.className = 'timer-bar warning';
+    if (elapsed >= seconds * 1000) {
+      clearInterval(timerInterval);
+      if (!answered) autoSkip();
+    }
+  }, step);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function resetTimerBar() {
+  clearTimer();
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+}
+
+function autoSkip() {
+  if (answered) return;
+  answered = true;
+  const q = currentQuestions[qIndex];
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach(b => {
+    b.disabled = true;
+    if (b.querySelector('span:last-child').textContent === q.correct) b.classList.add('correct');
+  });
+  wrong++;
+  streak = 0;
+  updateStreakBadge();
+  document.getElementById('q-wrong').textContent = wrong;
+  const fb = document.getElementById('feedback-box');
+  fb.textContent = `⏱ Time's up! The answer was: ${q.correct}`;
+  fb.className = 'feedback-box skip-fb show';
+  missedQs.push({ q: q.text, a: q.correct });
+  document.getElementById('next-btn').className = 'next-btn visible';
+}
+
+// ===== RESULTS =====
+function showResults() {
+  clearTimer();
+  const total = currentQuestions.length;
+  const pct = Math.round((score / total) * 100);
+
+  let emoji, title;
+  if (pct === 100) { emoji = '🏆'; title = 'Perfect Score! Extraordinary!'; }
+  else if (pct >= 80) { emoji = '⭐'; title = 'Excellent Work!'; }
+  else if (pct >= 60) { emoji = '👍'; title = 'Good Progress!'; }
+  else if (pct >= 40) { emoji = '💪'; title = 'Keep Pushing!'; }
+  else { emoji = '📚'; title = 'Let\'s Keep Learning!'; }
+
+  document.getElementById('r-emoji').textContent = emoji;
+  document.getElementById('r-title').textContent = title;
+  document.getElementById('r-score').textContent = `${score}/${total} · ${pct}%`;
+
+  // Subject-specific feedback
+  const subj = SUBJECTS.find(s => s.id === currentSubjectId);
+  let feedback = '';
+  if (currentSubjectId === '__mega') {
+    if (pct >= 80) feedback = `Impressive mega quiz result! You demonstrated strong knowledge across multiple subjects. Keep up this level of revision.`;
+    else if (pct >= 60) feedback = `A solid performance across all subjects! Review the questions you missed and try the individual subject quizzes to sharpen specific areas.`;
+    else feedback = `The mega quiz covers a wide range of topics — don\'t be discouraged! Focus on one subject at a time, then return to challenge yourself.`;
+  } else if (subj) {
+    const topicName = currentTopicIndex !== null ? subj.topics[currentTopicIndex].name : '';
+    if (pct >= 80) {
+      feedback = `Excellent performance in ${subj.name}! You clearly have a strong grasp of ${topicName}. Continue this great work and try the next topic when ready.`;
+    } else if (pct >= 60) {
+      feedback = `Good progress in ${subj.name} — ${topicName}! You\'ve shown solid understanding of several key concepts. Review the "Focus On These" items below to sharpen your knowledge further.`;
+    } else if (pct >= 40) {
+      feedback = `You\'re making progress in ${subj.name} — ${topicName}! Keep revisiting the definitions and key terms. The "Focus On These" items below show exactly what to practise.`;
+    } else {
+      feedback = `${topicName} covers a lot of important content! Don\'t worry — use the "Focus On These" section below to target the exact answers to learn, then retry the quiz. You\'ve got this!`;
+    }
+  }
+  document.getElementById('r-feedback').textContent = feedback;
+
+  // Focus panel
+  const focusPanel = document.getElementById('focus-panel');
+  const focusList = document.getElementById('focus-list');
+  if (missedQs.length > 0) {
+    focusPanel.style.display = 'block';
+    focusList.innerHTML = missedQs.slice(0, 8).map(m => `
+      <div class="focus-item">
+        <div class="focus-q">Q: ${m.q.length > 80 ? m.q.slice(0,80)+'…' : m.q}</div>
+        <div class="focus-a">✓ ${m.a}</div>
+      </div>
+    `).join('');
+  } else {
+    focusPanel.style.display = 'none';
+  }
+
+  if (pct === 100) launchConfetti();
+  showScreen('results-screen');
+}
+
+function retryQuiz() {
+  if (currentSubjectId === '__mega') { startMegaQuiz(); return; }
+  startQuiz(currentSubjectId, currentTopicIndex);
+}
+
+function backToSubject() {
+  if (currentSubjectId && currentSubjectId !== '__mega') {
+    showSubject(currentSubjectId);
+  } else {
+    showLanding();
+  }
+}
+
+// ===== SETTINGS =====
+function toggleSetting(key) {
+  settings[key] = !settings[key];
+  const tog = document.getElementById('tog-' + key);
+  if (settings[key]) tog.classList.add('on'); else tog.classList.remove('on');
+}
+
+// ===== EASTER EGGS =====
+function toast(msg) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function launchConfetti() {
+  const colors = ['#1a6cff','#c9a84c','#22c55e','#ef4444','#a78bfa','#fb923c','#f87171'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.top = '-20px';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (Math.random() * 8 + 4) + 'px';
+      piece.style.height = (Math.random() * 8 + 4) + 'px';
+      piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+function handleKeyDown(e) {
+  // Konami
+  konamiSeq.push(e.key);
+  if (konamiSeq.length > KONAMI.length) konamiSeq.shift();
+  if (konamiSeq.join(',') === KONAMI.join(',')) {
+    document.getElementById('konami-overlay').classList.add('show');
+  }
+  // Typing "revision"
+  if (e.key.length === 1) {
+    typedBuffer += e.key.toLowerCase();
+    if (typedBuffer.length > 10) typedBuffer = typedBuffer.slice(-10);
+    if (typedBuffer.includes('revision')) {
+      typedBuffer = '';
+      toast('🔥 Revision mode: ACTIVATED. You\'ve got this.');
+    }
+  }
+}
+
+function closeKonami() {
+  document.getElementById('konami-overlay').classList.remove('show');
+}
+
+function showTipSecret() {
+  if (!tipShown) {
+    tipShown = true;
+    document.getElementById('tips-bar').innerHTML = '🕹️ <span>Secret hint:</span> Try typing "revision" anywhere, or press ↑↑↓↓←→←→BA on your keyboard...';
+    toast('💡 Tips bar revealed a secret!');
+  }
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+init();
+</script>
+</body>
+</html>
